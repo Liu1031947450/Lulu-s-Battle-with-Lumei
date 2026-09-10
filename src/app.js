@@ -57,14 +57,18 @@
     portrait.save();
     if (winner) {
       Artwork.oval(portrait, 130, 113, 89, 74, kind === 'lulu' ? '#f6e6bf' : '#f0e0da');
-      Artwork.drawFighter(portrait, { id: kind === 'lulu' ? 0 : 1, kind, x: 128, y: 202, facing: 1, state: 'victory', stateFrame: 0 }, 0.8, { scale: 0.63, shadow: false });
+      Artwork.drawFighter(portrait, { id: kind === 'lulu' ? 0 : 1, kind, x: 128, y: 202, facing: 1, state: 'victory', stateFrame: 0 }, 0.8, { scale: 0.63, shadow: false, view: 'front' });
     } else {
-      Artwork.drawFighter(portrait, { id: kind === 'lulu' ? 0 : 1, kind, x: 59, y: 195, facing: kind === 'lulu' ? 1 : -1, state: 'idle', stateFrame: 0 }, 1, { scale: 0.64, shadow: false });
+      Artwork.drawFighter(portrait, { id: kind === 'lulu' ? 0 : 1, kind, x: 59, y: 195, facing: kind === 'lulu' ? 1 : -1, state: 'idle', stateFrame: 0 }, 1, { scale: 0.64, shadow: false, view: 'front' });
     }
     portrait.restore();
   }
   drawPortrait(byId('portrait-0'), 'lulu');
   drawPortrait(byId('portrait-1'), 'lumei');
+  globalThis.Character3D?.ready.then(() => {
+    drawPortrait(byId('portrait-0'), 'lulu');
+    drawPortrait(byId('portrait-1'), 'lumei');
+  });
 
   function start(mode = currentMode) {
     currentMode = mode;
@@ -278,7 +282,7 @@
       fighters: match.fighters.map(fighter => ({ id: fighter.id, kind: fighter.kind, x: fighter.x, y: fighter.y, health: fighter.health, state: fighter.state, facing: fighter.facing, jumps: fighter.jumps, grounded: fighter.grounded, cooldown: fighter.cooldown, guarding: fighter.guarding, running: fighter.running, stats: { ...fighter.stats } })),
       audio: { enabled: audio.enabled, state: audio.context?.state ?? 'locked', music: Boolean(audio.music) }
     } : { phase: 'home', audio: { enabled: audio.enabled, state: audio.context?.state ?? 'locked' } },
-    ready: true
+    get ready() { return !globalThis.Character3D || Character3D.status().state !== 'loading'; }
   });
   requestAnimationFrame(animate);
 })();

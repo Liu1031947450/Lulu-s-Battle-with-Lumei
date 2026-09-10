@@ -1,4 +1,4 @@
-/* 同一份分层几何生成实时动画、三视图、SVG 与精灵图集；不加载外部图片。 */
+/* 场景、特效、共享动作姿势与二维兼容；统一角色入口优先渲染内嵌 GLB。 */
 const Artwork = (() => {
   const shape = (path, fill, stroke = 'none', width = 1.2, volume) => ({ path, fill, stroke, width, volume });
   const ellipsePath = (centerX, centerY, radiusX, radiusY) => `M${centerX - radiusX},${centerY}a${radiusX},${radiusY} 0 1,0 ${radiusX * 2},0a${radiusX},${radiusY} 0 1,0 ${-radiusX * 2},0`;
@@ -400,7 +400,7 @@ const Artwork = (() => {
     context.restore();
   }
 
-  function drawFighter(context, fighter, time, { scale = 0.82, shadow = true, view = 'front' } = {}) {
+  function drawFighter(context, fighter, time, { scale = 0.82, shadow = true, view = 'battle' } = {}) {
     const pose = poseFor(fighter, time);
     if (shadow && fighter.state === 'defeat' && ((fighter.x < 210 && fighter.facing === 1) || (fighter.x > 1070 && fighter.facing === -1))) pose.tilt *= -1;
     if (shadow) {
@@ -423,7 +423,8 @@ const Artwork = (() => {
       for (let trail = 3; trail > 0; trail -= 1) oval(context, -30 - trail * 33, -93, 24 + trail * 10, 33 - trail * 5, `rgba(255,194,82,${0.2 - trail * 0.035})`);
     }
     const headLayers = new Set(['leftEar', 'rightEar', 'head', 'bonnetBack', 'bonnet', 'muzzle', 'eyes', 'mouth', 'orange']);
-    for (const layer of MODEL_VIEWS[fighter.kind][view]) {
+    const layers = globalThis.Character3D?.draw(context, fighter, time, pose, view) ? [] : MODEL_VIEWS[fighter.kind][view] || MODEL_VIEWS[fighter.kind].front;
+    for (const layer of layers) {
       context.save();
       if (headLayers.has(layer.id)) {
         context.translate(0, -143 + pose.headY);

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>噜噜与噜妹 · 3D 模型三视图</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 28px; color: #584838; background: #f8f5ef; font: 15px/1.6 system-ui, sans-serif; }
+    main { max-width: 1320px; margin: auto; }
+    h1 { margin: 0; font-size: 25px; } p { margin: 4px 0 20px; color: #827466; }
+    nav { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 20px 0; }
+    button, select, a { padding: 9px 16px; border: 1px solid #dcd0c0; border-radius: 10px; background: #fffdf9; color: inherit; font: inherit; text-decoration: none; }
+    button { cursor: pointer; } button[aria-pressed="true"] { background: #ead9bf; border-color: #bba484; }
+    button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid #ac7942; outline-offset: 3px; }
+    .models { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    article { border: 1px solid #e8dfd2; border-radius: 22px; background: radial-gradient(ellipse at 45% 30%, #fff 10%, #f1ede6); overflow: hidden; text-align: center; }
+    h2 { margin: 18px 0 0; font-size: 19px; } canvas { display: block; width: 100%; height: auto; }
+    .download { display: inline-block; margin: 0 0 20px; } #status { min-height: 24px; }
+    @media (max-width: 650px) { body { padding: 16px; } .models { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>噜噜与噜妹 · 3D 模型</h1>
+  <p>同一套 GLB 的正面、侧面、背面与转台预览。游戏采用相同模型与关节动作，支持离线打开。</p>
+  <nav aria-label="模型视角">
+    <button data-view="front" aria-pressed="true">正面</button>
+    <button data-view="side" aria-pressed="false">侧面</button>
+    <button data-view="back" aria-pressed="false">背面</button>
+    <button data-view="turntable" aria-pressed="false">转台</button>
+    <label for="animation">动作</label><select id="animation"><option value="reference">三视图静态姿势</option></select>
+    <button id="pause" aria-pressed="false">暂停动作</button>
+  </nav>
+  <p id="status" role="status">正在加载内嵌 3D 模型…</p>
+  <section class="models">
+    <article><h2>噜噜 · 橙色短裤</h2><canvas id="lulu" width="600" height="680" aria-label="噜噜三维模型"></canvas><a class="download" href="lulu.glb" download>下载 lulu.glb</a></article>
+    <article><h2>噜妹 · 粉色围兜连体衣</h2><canvas id="lumei" width="600" height="680" aria-label="噜妹三维模型"></canvas><a class="download" href="lumei.glb" download>下载 lumei.glb</a></article>
+  </section>
+</main>
+<!--__MODEL_SCRIPT__-->
+<script>
+  const selection = document.getElementById('animation');
+  for (const state of Object.keys(Artwork.ANIMATIONS)) selection.add(new Option(state, state));
+  let view = 'front';
+  let paused = false;
+  let elapsed = 0;
+  let previous = 0;
+  document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => {
+    view = button.dataset.view;
+    document.querySelectorAll('[data-view]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+  }));
+  document.getElementById('pause').addEventListener('click', event => {
+    paused = !paused;
+    event.currentTarget.setAttribute('aria-pressed', String(paused));
+    event.currentTarget.textContent = paused ? '继续动作' : '暂停动作';
+  });
+  selection.addEventListener('change', () => { elapsed = 0; });
+  Character3D.ready.then(() => {
+    const status = Character3D.status();
+    document.getElementById('status').textContent = status.backend === 'webgl2' ? '实时 WebGL 2 · 两个独立 GLB · 每个模型 16 种关节动画 · +Y 向上 / +Z 朝前' : '当前设备无法启用 WebGL 2，正在显示二维回退；请在支持硬件加速的浏览器中查看 3D。';
+  });
+  function render(milliseconds) {
+    if (previous && !paused) elapsed += Math.min(0.1, (milliseconds - previous) / 1000);
+    previous = milliseconds;
+    for (const [index, kind] of ['lulu', 'lumei'].entries()) {
+      const canvas = document.getElementById(kind);
+      const context = canvas.getContext('2d');
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      Artwork.oval(context, 300, 626, 124, 15, '#c2b49c26');
+      const state = selection.value;
+      const definition = Artwork.ANIMATIONS[state];
+      const duration = state === 'attack' ? 0.45 : state === 'skill' ? 0.75 : definition ? definition.frames / definition.fps : 1;
+      const seconds = definition ? (definition.loop ? elapsed % duration : Math.min(elapsed, duration)) : 1;
+      const frame = Math.round(seconds * 60);
+      const fighter = { id: index, kind, x: 300, y: 622, facing: 1, state, stateFrame: frame, jumpFrame: Math.min(18, frame), move: ['attack', 'skill'].includes(state) ? { frame } : null };
+      const pose = state === 'reference' ? { ...Artwork.poseFor(fighter, 1), bodyY: 0, headAngle: 0, farArm: 0, nearArm: 0 } : Artwork.poseFor(fighter, seconds + 1);
+      context.save();
+      context.translate(300, 622 + pose.bodyY * 1.83);
+      context.scale(1.83, 1.83);
+      context.translate(0, -125); context.rotate(pose.spin); context.translate(0, 125);
+      context.rotate(pose.tilt); context.scale(pose.scaleX, pose.scaleY);
+      const angle = view === 'turntable' ? elapsed * 0.42 : view;
+      const drawn = Character3D.draw(context, fighter, seconds + 1, pose, angle);
+      context.restore();
+      if (!drawn) Artwork.drawFighter(context, fighter, 1, { scale: 1.83, shadow: false, view: typeof angle === 'string' ? angle : 'front' });
+    }
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+</script>
+</body>
+</html>

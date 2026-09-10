@@ -2,23 +2,34 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { build } from 'esbuild';
+import { exportModels } from './export-models.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const require = createRequire(import.meta.url);
 const artwork = require('../src/art.js');
 const soundtrack = require('../src/audio.js');
+await exportModels();
+const characters = await build({
+  entryPoints: [path.join(root, 'src/characters.mjs')], bundle: true, write: false,
+  format: 'iife', globalName: 'Character3D', minify: true, target: 'es2022',
+  loader: { '.glb': 'base64' }, supported: { 'template-literal': false }, legalComments: 'inline'
+});
 const template = await readFile(path.join(root, 'src/page.html'), 'utf8');
 const styles = await readFile(path.join(root, 'src/style.css'), 'utf8');
 const sourceNames = ['engine', 'input', 'art', 'audio', 'app'];
 const sources = await Promise.all(sourceNames.map(name => readFile(path.join(root, `src/${name}.js`), 'utf8')));
 if (!template.includes('/*__GAME_CSS__*/') || !template.includes('<!--__GAME_SCRIPT__-->')) throw new Error('缺少发布模板占位符');
-const bundle = sources.join('\n\n').replace(/<\/script/gi, '<\\/script');
+const bundle = [characters.outputFiles[0].text, ...sources].join('\n\n').replace(/<\/script/gi, '<\\/script');
 const html = template.replace('/*__GAME_CSS__*/', () => styles).replace('<!--__GAME_SCRIPT__-->', () => `<script>\n${bundle}\n</script>`);
 await writeFile(path.join(root, 'index.html'), html);
+const preview = await readFile(path.join(root, 'src/model-preview.html'), 'utf8');
+const previewBundle = `${characters.outputFiles[0].text}\n${sources[sourceNames.indexOf('art')]}`.replace(/<\/script/gi, '<\\/script');
+await writeFile(path.join(root, 'assets/models/preview.html'), preview.replace('<!--__MODEL_SCRIPT__-->', () => `<script>${previewBundle}</script>`));
 await mkdir(path.join(root, 'assets/models'), { recursive: true });
 await mkdir(path.join(root, 'assets/audio'), { recursive: true });
 for (const kind of ['lulu', 'lumei']) await writeFile(path.join(root, `assets/models/${kind}.svg`), artwork.modelSvg(kind));
-await writeFile(path.join(root, 'assets/animation-definitions.json'), `${JSON.stringify({ format: 'layered-2d', source: '../src/art.js', animations: artwork.ANIMATIONS }, null, 2)}\n`);
+await writeFile(path.join(root, 'assets/animation-definitions.json'), `${JSON.stringify({ format: 'glTF-2.0', models: ['models/lulu.glb', 'models/lumei.glb'], source: '../src/art.js', fallback: 'layered-2d', animations: artwork.ANIMATIONS }, null, 2)}\n`);
 
 function wav(samples, rate) {
   const buffer = Buffer.alloc(44 + samples.length * 2);
@@ -32,4 +43,4 @@ function wav(samples, rate) {
 for (const name of ['garden', ...Object.keys(soundtrack.CLIPS)]) {
   await writeFile(path.join(root, `assets/audio/${name}.wav`), wav(soundtrack.synthesize(name), soundtrack.RATE));
 }
-console.log(`已构建 index.html (${(Buffer.byteLength(html) / 1024).toFixed(1)} KiB)，内嵌全部运行时资源；已导出分层 SVG 和 WAV。`);
+console.log(`已构建 index.html (${(Buffer.byteLength(html) / 1024).toFixed(1)} KiB)，内嵌 3D 引擎与两套 GLB；已导出模型预览、二维回退 SVG 和 WAV。`);

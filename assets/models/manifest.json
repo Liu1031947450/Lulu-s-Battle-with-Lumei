@@ -1,0 +1,209 @@
+{
+  "format": "glTF 2.0 binary",
+  "units": "meters",
+  "forward": "+Z",
+  "up": "+Y",
+  "source": "../../scripts/export-models.mjs",
+  "models": {
+    "lulu": {
+      "file": "lulu.glb",
+      "bytes": 1837988,
+      "triangles": 138768,
+      "meshes": 43,
+      "bounds": {
+        "min": [
+          -1.0569458565062442,
+          0,
+          -0.699999988079071
+        ],
+        "max": [
+          1.0569458565062442,
+          3.6054372704029083,
+          1.0266014337539673
+        ]
+      },
+      "animations": [
+        {
+          "name": "idle",
+          "duration": 1,
+          "loop": true
+        },
+        {
+          "name": "walk",
+          "duration": 0.6666666666666666,
+          "loop": true
+        },
+        {
+          "name": "run",
+          "duration": 0.4444444444444444,
+          "loop": true
+        },
+        {
+          "name": "jump",
+          "duration": 0.6666666666666666,
+          "loop": false
+        },
+        {
+          "name": "double-jump",
+          "duration": 0.4,
+          "loop": false
+        },
+        {
+          "name": "crouch",
+          "duration": 0.5,
+          "loop": false
+        },
+        {
+          "name": "rise",
+          "duration": 0.2,
+          "loop": false
+        },
+        {
+          "name": "backstep",
+          "duration": 0.6666666666666666,
+          "loop": true
+        },
+        {
+          "name": "attack",
+          "duration": 0.45,
+          "loop": false
+        },
+        {
+          "name": "skill",
+          "duration": 0.75,
+          "loop": false
+        },
+        {
+          "name": "guard",
+          "duration": 0.6,
+          "loop": true
+        },
+        {
+          "name": "hit",
+          "duration": 0.3333333333333333,
+          "loop": false
+        },
+        {
+          "name": "stun",
+          "duration": 0.5,
+          "loop": true
+        },
+        {
+          "name": "defeat",
+          "duration": 0.6666666666666666,
+          "loop": false
+        },
+        {
+          "name": "victory",
+          "duration": 0.8,
+          "loop": true
+        },
+        {
+          "name": "draw",
+          "duration": 0.75,
+          "loop": true
+        }
+      ]
+    },
+    "lumei": {
+      "file": "lumei.glb",
+      "bytes": 3782564,
+      "triangles": 260056,
+      "meshes": 69,
+      "bounds": {
+        "min": [
+          -1.272694706916809,
+          0,
+          -0.8640000224113464
+        ],
+        "max": [
+          1.269531488418579,
+          4.009835011212851,
+          1.0613616704940796
+        ]
+      },
+      "animations": [
+        {
+          "name": "idle",
+          "duration": 1,
+          "loop": true
+        },
+        {
+          "name": "walk",
+          "duration": 0.6666666666666666,
+          "loop": true
+        },
+        {
+          "name": "run",
+          "duration": 0.4444444444444444,
+          "loop": true
+        },
+        {
+          "name": "jump",
+          "duration": 0.6666666666666666,
+          "loop": false
+        },
+        {
+          "name": "double-jump",
+          "duration": 0.4,
+          "loop": false
+        },
+        {
+          "name": "crouch",
+          "duration": 0.5,
+          "loop": false
+        },
+        {
+          "name": "rise",
+          "duration": 0.2,
+          "loop": false
+        },
+        {
+          "name": "backstep",
+          "duration": 0.6666666666666666,
+          "loop": true
+        },
+        {
+          "name": "attack",
+          "duration": 0.45,
+          "loop": false
+        },
+        {
+          "name": "skill",
+          "duration": 0.75,
+          "loop": false
+        },
+        {
+          "name": "guard",
+          "duration": 0.6,
+          "loop": true
+        },
+        {
+          "name": "hit",
+          "duration": 0.3333333333333333,
+          "loop": false
+        },
+        {
+          "name": "stun",
+          "duration": 0.5,
+          "loop": true
+        },
+        {
+          "name": "defeat",
+          "duration": 0.6666666666666666,
+          "loop": false
+        },
+        {
+          "name": "victory",
+          "duration": 0.8,
+          "loop": true
+        },
+        {
+          "name": "draw",
+          "duration": 0.75,
+          "loop": true
+        }
+      ]
+    }
+  }
+}

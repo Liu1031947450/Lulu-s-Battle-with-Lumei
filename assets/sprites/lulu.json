@@ -4,7 +4,8 @@
     4992,
     5632
   ],
-  "source": "../../src/art.js",
+  "source": "../../src/characters.mjs",
+  "model": "../models/lulu.glb",
   "animations": {
     "idle": {
       "fps": 8,

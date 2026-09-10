@@ -1,6 +1,11 @@
 {
-  "format": "layered-2d",
+  "format": "glTF-2.0",
+  "models": [
+    "models/lulu.glb",
+    "models/lumei.glb"
+  ],
   "source": "../src/art.js",
+  "fallback": "layered-2d",
   "animations": {
     "idle": {
       "frames": 8,

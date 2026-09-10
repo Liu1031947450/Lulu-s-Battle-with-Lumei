@@ -64,6 +64,14 @@ try {
     await capture('home');
   });
 
+  await check('内嵌 GLB 通过 WebGL 2 渲染，两角色各含 16 种动画', async () => {
+    const modelStatus = await page.evaluate(() => Character3D.status());
+    assert.equal(modelStatus.backend, 'webgl2', modelStatus.error);
+    assert.equal(modelStatus.models.length, 2);
+    assert.ok(modelStatus.models.every(model => model.animations.length === 16));
+    report.models = modelStatus;
+  });
+
   await check('操作指南、Escape 关闭、声音解锁和静音开关', async () => {
     await click('help-open');
     assert.equal(await page.locator('#help-dialog').evaluate(dialog => dialog.open), true);
@@ -329,6 +337,32 @@ try {
     assert.deepEqual(report.externalRequests, []);
     const networkResources = await page.evaluate(() => performance.getEntriesByType('resource').filter(entry => /^https?:/.test(entry.name)).map(entry => entry.name));
     assert.deepEqual(networkResources, []);
+  });
+
+  await check('WebGL 不可用时保留二维角色，离线对战仍可开始和移动', async () => {
+    const fallbackPage = await browserContext.newPage();
+    try {
+      await fallbackPage.addInitScript(() => {
+        const getContext = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function (type, ...options) {
+          return type === 'webgl2' ? null : getContext.call(this, type, ...options);
+        };
+      });
+      await fallbackPage.clock.install();
+      if (engine === 'webkit') await browserContext.setOffline(false);
+      await fallbackPage.goto(pathToFileURL(path.join(root, 'index.html')).href);
+      if (engine === 'webkit') await browserContext.setOffline(true);
+      await fallbackPage.waitForFunction(() => LuluGame.ready);
+      assert.equal(await fallbackPage.evaluate(() => Character3D.status().state), 'fallback');
+      await fallbackPage.locator('#start-duo').click();
+      await fallbackPage.clock.runFor(3300);
+      const initial = await fallbackPage.evaluate(() => LuluGame.snapshot());
+      assert.equal(initial.phase, 'fighting');
+      await fallbackPage.keyboard.down('KeyD');
+      await fallbackPage.clock.runFor(250);
+      await fallbackPage.keyboard.up('KeyD');
+      assert.ok((await fallbackPage.evaluate(() => LuluGame.snapshot())).fighters[0].x > initial.fighters[0].x);
+    } finally { await fallbackPage.close(); }
   });
   report.passed = true;
   console.log(`浏览器验收完成：${engine} ${report.version}，${report.checks.length} 项通过。`);
