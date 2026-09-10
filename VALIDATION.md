@@ -2,6 +2,8 @@
 
 验收日期：2026 年 9 月 10 日。环境：macOS / Apple Silicon，Node.js 22.22.0，Playwright 1.63.0。
 
+本次为背景地图增量更新，重新执行构建、原生测试与三内核浏览器流程。角色建模、战斗、输入、音效源码及独立模型 / 图集 / 音频资源未改；GLB 标准验证、独立文件复制、三维预览交互、图集边界与 FPS 专项沿用前次验收记录，本次未重跑这些专项。
+
 ## 结果概览
 
 | 项目 | 结果 |
@@ -9,9 +11,10 @@
 | Node 核心 / 输入 / 实际 GLB 测试 | **31 / 31 通过** |
 | 固定种子人机自动对战 | **100 / 100 正常结束，全部 KO** |
 | 模拟统计 | 1604 次有效命中、888 次成功格挡，无异常数值、越界或超时卡死 |
-| Chrome 153.0.8010.37 | **20 / 20 浏览器流程通过，实际 WebGL 2 渲染** |
-| Firefox 155.0（Playwright） | **20 / 20 浏览器流程通过，实际 WebGL 2 渲染** |
-| WebKit 26.6（Playwright） | **20 / 20 浏览器流程通过，实际 WebGL 2 渲染** |
+| Chrome 153.0.8010.37 | **21 / 21 浏览器流程通过，实际 WebGL 2 渲染** |
+| Firefox 155.0（Playwright） | **21 / 21 浏览器流程通过，实际 WebGL 2 渲染** |
+| WebKit 26.6（Playwright） | **21 / 21 浏览器流程通过，实际 WebGL 2 渲染** |
+| 五种背景地图 | 全部绘制成功、缓存不串图、减少动态时画面固定；随机选择覆盖候选，重开不连续重复 |
 | 两份 GLB 标准验证 | Khronos glTF Validator：每份均 **0 errors / 0 warnings / 0 infos** |
 | 独立单文件验证 | **通过**：仅复制 HTML 到中文 / 空格路径的空目录，仍能离线加载 3D、开始对战和键盘移动 |
 | 三维预览 | **通过**：正 / 侧 / 背 / 转台切换，行走逐帧画面变化，暂停后像素保持不变 |
@@ -22,12 +25,13 @@
 被验收成品 `index.html` 的 SHA-256：
 
 ```text
-2aedeb46b169e58184a0688327c1f3e44334c947e577a807b38e9b5e938ae558
+a961f88d13fb89ac4629890e082116165b96baa7ec8d00905d54be406a690dbf
 ```
 
 ## 覆盖内容
 
 - 模式选择、操作指南、音频解锁与静音、三秒倒计时、对战 HUD。
+- 花园、落日海滨、樱花庭院、极光雪原、霓虹天台均可离线绘制；开局与各重开入口选图，对局及暂停恢复不换图，返回首页恢复花园。
 - 双方同时移动、双击奔跑、后退、二段跳、长按重复事件过滤、落地重置、下蹲和起身。
 - P1 J/K/L、P2 小键盘 1/2/3、主键区 1/2/3 的实际浏览器按键输入；Num Lock 不改变物理 code 的逻辑另有原生测试。
 - 普攻前摇、有效命中距离、高度判断、同次攻击只命中一次、双方同帧交换伤害。
@@ -56,6 +60,7 @@
 
 - `artifacts/unit-tests.tap`：原生测试原始输出。
 - `artifacts/chromium-report.json`、`artifacts/firefox-report.json`、`artifacts/webkit-report.json`：逐项结果、浏览器版本、成品 SHA-256 与截图清单。
+- `artifacts/chromium-map-*.png`：五张背景的实际画布截图，已逐张检查主题差异及战斗区域留白。
 - `artifacts/assets-report.json`、`artifacts/standalone-report.json`：资源与单文件验证结果。
 - `artifacts/lulu-gltf-validation.json`、`artifacts/lumei-gltf-validation.json`：Khronos GLB 校验结果及对应文件 SHA-256。
 - `artifacts/models-front.png`、`artifacts/models-side.png`、`artifacts/models-back.png`、`artifacts/standalone-3d.png`：预览交互与独立离线文件截图。
@@ -73,7 +78,7 @@ node scripts/package.mjs
 
 ## 验证边界
 
-- 本次交付更新根目录游戏及 `assets/`，未重打包此前的 `release/` ZIP；旧压缩包不能代表此次三维更新。
+- 本次交付更新根目录游戏及生成的预览脚本，未重打包此前的 `release/` ZIP；旧压缩包不能代表此次地图更新。
 - 三维网格按提供的图片观察重建，不宣称逐像素 / 扫描级一致；采用分部件关节动画，未交付 Humanoid 蒙皮重定向、布料物理或 FBX。具体使用边界见 `assets/models/README.md`。
 - WebKit 的离线模拟在本机也会阻止导航到 `file://`。已对照验证：同一文件在未开启模拟时可正常加载。因此 WebKit 测试在导航前阻断全部 HTTP/HTTPS，请求本地文件后立即开启离线模拟，再完成全部对局；游戏没有增加服务器依赖或联网回退。
 - WebKit 测试不等于对所有正式 Safari 版本的实机验证；未在 Windows、Android、iOS 或游戏手柄上做实机验收。本版明确面向桌面键盘。

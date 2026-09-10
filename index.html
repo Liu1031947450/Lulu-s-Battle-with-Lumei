@@ -1445,7 +1445,197 @@ const Artwork = (() => {
     oval(context, centerX, centerY, size * 0.36, size * 0.36, '#eebd69');
   }
 
-  function drawBackdrop(context) {
+  const MAPS = Object.freeze({ garden: '橘子云朵花园', beach: '落日海滨', sakura: '樱花庭院', snow: '极光雪原', city: '霓虹天台' });
+  const backgrounds = new Map();
+
+  function randomMap(previous, random = Math.random) {
+    const choices = Object.keys(MAPS).filter(map => map !== previous);
+    return choices[Math.floor(random() * choices.length)];
+  }
+
+  function mapSky(context, colors) {
+    const sky = context.createLinearGradient(0, 0, 0, 470);
+    colors.forEach((color, index) => sky.addColorStop(index / (colors.length - 1), color));
+    context.fillStyle = sky; context.fillRect(0, 0, 1280, 620);
+  }
+
+  function mapArena(context, edge, rim, surface, highlight) {
+    oval(context, 640, 555, 590, 47, '#48576924');
+    drawShapes(context, [shape('M54,496 L54,527 C77,615 1210,615 1226,527 L1226,496Z', edge)]);
+    oval(context, 640, 493, 586, 87, rim);
+    oval(context, 640, 491, 568, 78, surface);
+    const light = context.createLinearGradient(0, 430, 0, 561);
+    light.addColorStop(0, highlight); light.addColorStop(1, surface);
+    oval(context, 640, 494, 532, 66, light);
+  }
+
+  function beachBackdrop(context) {
+    mapSky(context, ['#fff0e2', '#f8c3a4', '#ffe6b9']);
+    const glow = context.createRadialGradient(833, 231, 20, 833, 231, 160);
+    glow.addColorStop(0, '#ffeccabd'); glow.addColorStop(1, '#fff0c000');
+    oval(context, 833, 231, 160, 160, glow);
+    oval(context, 833, 231, 58, 58, '#ffe5aa');
+    cloud(context, 268, 175, 1.02, 0.42); cloud(context, 1047, 177, 0.78, 0.32);
+    const sea = context.createLinearGradient(0, 299, 0, 525);
+    sea.addColorStop(0, '#8dbfc7'); sea.addColorStop(0.6, '#a5d9d1'); sea.addColorStop(1, '#c8e8d7');
+    context.fillStyle = sea; context.fillRect(0, 299, 1280, 321);
+    drawShapes(context, [shape('M0,310 Q79,245 145,277 Q179,270 218,308Z', '#a0b3b0'), shape('M947,311 Q1010,274 1050,283 Q1103,246 1170,292 L1280,311Z', '#a6b4b2')]);
+    for (let stripe = 0; stripe < 8; stripe += 1) {
+      const width = 35 + stripe * 12;
+      rounded(context, 833 - width / 2, 306 + stripe * 10, width, 3, 2, '#ffedc07a');
+    }
+    context.save(); context.translate(1050, 281);
+    drawShapes(context, [shape('M-20,0 L-15,-86 L15,-86 L20,0Z', '#fff1d5'), shape('M-17,-48 L17,-48 L18,-32 L-18,-32Z', '#d88d83'), shape('M-24,-88 L0,-113 L24,-88Z', '#c98479')]);
+    rounded(context, -13, -85, 26, 17, 3, '#d6e5df'); rounded(context, -4, -30, 8, 15, 4, '#93b6ba');
+    context.restore();
+    drawShapes(context, [shape('M591,340 L646,340 L634,351 L602,351Z', '#b18c77'), shape('M617,335 L617,288 L588,335Z', '#fff4d9'), shape('M622,336 L622,302 L646,336Z', '#eaa78f')]);
+    drawShapes(context, [shape('M0,439 Q176,390 353,430 Q635,392 810,431 Q1115,398 1280,441 L1280,620 L0,620Z', '#eddbb8'), shape('M0,440 Q177,404 353,438 Q635,408 810,440 Q1115,414 1280,451', 'none', '#f8f1d3', 6)]);
+    for (const [centerX, bottom, scale, direction] of [[92, 454, 1, 1], [1190, 452, 0.9, -1]]) {
+      context.save(); context.translate(centerX, bottom); context.scale(scale * direction, scale);
+      drawShapes(context, [shape('M-11,0 Q15,-92 0,-181 L12,-180 Q37,-92 13,0Z', '#bb9975')]);
+      for (let leaf = 0; leaf < 5; leaf += 1) {
+        context.save(); context.translate(7, -178); context.rotate(-1.2 + leaf * 0.58);
+        drawShapes(context, [shape('M0,0 Q-26,-87 10,-111 Q40,-62 0,0Z', leaf % 2 ? '#81ae94' : '#699d88')]); context.restore();
+      }
+      oval(context, 2, -174, 10, 11, '#bca17c'); oval(context, 19, -172, 10, 11, '#c9ac84'); context.restore();
+    }
+    mapArena(context, '#bb9773', '#d6b485', '#edcf9d', '#fff0cc');
+    context.save(); context.beginPath(); context.ellipse(640, 494, 544, 68, 0, 0, Math.PI * 2); context.clip();
+    for (let plank = 0; plank < 13; plank += 1) {
+      const plankX = 100 + plank * 92;
+      drawShapes(context, [shape(`M${plankX},416 L${plankX - 24},575`, 'none', '#c7a47165', 2)]);
+      oval(context, plankX - 10, 530, 2, 1.5, '#b18c6566');
+    }
+    context.restore();
+    for (const [shellX, shellY, scale] of [[65, 559, 1], [1200, 550, 0.9], [215, 591, 0.7]]) {
+      context.save(); context.translate(shellX, shellY); context.scale(scale, scale);
+      drawShapes(context, [shape('M0,12 Q-34,-1 -23,-13 Q-11,-31 0,-17 Q11,-31 23,-13 Q34,-1 0,12Z', '#f5c4ae'), shape('M0,10 L-17,-12 M0,10 L0,-16 M0,10 L17,-12', 'none', '#dca88d', 1.5)]);
+      context.restore();
+    }
+    star(context, 1090, 588, 13, '#e5b489', 0.3);
+  }
+
+  function sakuraBackdrop(context) {
+    mapSky(context, ['#fff3ed', '#eddce8', '#f3e9d7']);
+    oval(context, 711, 191, 40, 40, '#fff7e8');
+    drawShapes(context, [shape('M0,354 Q109,207 262,316 Q421,208 586,328 Q755,226 890,311 Q1100,198 1280,341 L1280,620 L0,620Z', '#d7c9dc'), shape('M0,383 Q262,289 469,378 Q712,293 955,367 Q1128,297 1280,376 L1280,620 L0,620Z', '#c7c8cf')]);
+    context.fillStyle = '#c1d8d4'; context.fillRect(0, 387, 1280, 233);
+    for (let ripple = 0; ripple < 9; ripple += 1) rounded(context, 36 + ripple * 147, 405 + ripple % 3 * 13, 64, 2, 1, '#ecf0dd94');
+    context.save(); context.translate(920, 372);
+    rounded(context, -81, -85, 163, 85, 3, '#e5c6b7');
+    for (let pillar = 0; pillar < 5; pillar += 1) rounded(context, -70 + pillar * 35, -88, 8, 89, 2, '#ae7b77');
+    drawShapes(context, [shape('M-118,-79 Q-58,-89 0,-130 Q58,-89 118,-79 L103,-67 Q42,-77 0,-101 Q-42,-77 -103,-67Z', '#8d8196'), shape('M-112,-79 Q-54,-83 0,-121 Q54,-83 112,-79', 'none', '#b29aab', 5)]);
+    rounded(context, -25, -56, 50, 55, [24, 24, 0, 0], '#b3beb9'); context.restore();
+    drawShapes(context, [shape('M441,419 Q626,335 807,419 L807,431 Q626,360 441,431Z', '#c8958d'), shape('M440,393 Q626,308 808,393', 'none', '#bc8784', 8)]);
+    for (let post = 0; post <= 8; post += 1) {
+      const postX = 444 + post * 45;
+      const archY = 393 - Math.sin(post / 8 * Math.PI) * 43;
+      rounded(context, postX - 3, archY, 6, 31, 2, '#c3948c');
+    }
+    for (const [centerX, bottom, scale, direction] of [[122, 446, 0.97, 1], [1158, 444, 0.87, -1]]) {
+      context.save(); context.translate(centerX, bottom); context.scale(scale * direction, scale);
+      drawShapes(context, [shape('M-15,0 Q5,-82 -12,-138 L-73,-180 L-65,-188 L-8,-160 L18,-222 L29,-218 L16,-141 Q26,-62 14,0Z', '#aa8d8d')]);
+      for (const [branchX, branchY, radius, fill] of [[-73, -184, 54, '#e6b3c5'], [41, -188, 67, '#e6b3c5'], [-5, -218, 71, '#f0c3d2'], [-60, -216, 39, '#f6d2dd'], [29, -246, 45, '#f5d0d9'], [84, -208, 38, '#f1cad4']]) oval(context, branchX, branchY, radius, radius * 0.69, fill);
+      for (let flower = 0; flower < 12; flower += 1) daisy(context, -84 + flower * 31 % 166, -169 - flower * 23 % 86, 4 + flower % 3, '#ffe7eb');
+      context.restore();
+    }
+    drawShapes(context, [shape('M0,451 Q291,419 529,444 Q868,417 1280,452 L1280,620 L0,620Z', '#ded3c4')]);
+    for (const lanternX of [257, 1090]) {
+      rounded(context, lanternX - 6, 386, 12, 61, 3, '#a8a4a2'); rounded(context, lanternX - 22, 376, 44, 13, 3, '#b4b0ac');
+      rounded(context, lanternX - 14, 345, 28, 31, 3, '#e8d9bf'); rounded(context, lanternX - 9, 350, 18, 19, 3, '#fff1c7');
+      drawShapes(context, [shape(`M${lanternX - 28},344 L${lanternX},326 L${lanternX + 28},344Z`, '#a39a9e')]);
+    }
+    mapArena(context, '#b8a6a3', '#d7c0bb', '#eaddcf', '#fbf0e3');
+    context.save(); context.beginPath(); context.ellipse(640, 494, 538, 66, 0, 0, Math.PI * 2); context.clip();
+    for (let row = 0; row < 4; row += 1) {
+      const top = 436 + row * 35;
+      drawShapes(context, [shape(`M75,${top} L1205,${top}`, 'none', '#cdbfb35c', 1.5)]);
+      for (let tile = 0; tile < 8; tile += 1) drawShapes(context, [shape(`M${150 + tile * 146 + row % 2 * 73},${top} v35`, 'none', '#cdbfb35c', 1.5)]);
+    }
+    context.restore();
+    for (let petal = 0; petal < 18; petal += 1) oval(context, 55 + petal * 137 % 1180, 563 + petal * 11 % 34, 6, 3, petal % 2 ? '#efd0d4' : '#f8e3e4');
+  }
+
+  function snowBackdrop(context) {
+    mapSky(context, ['#e6eaf5', '#8f9fbf', '#cedfe8']);
+    const aurora = context.createLinearGradient(0, 140, 0, 290);
+    aurora.addColorStop(0, '#c8f2e900'); aurora.addColorStop(0.6, '#bceee287'); aurora.addColorStop(1, '#87d5d629');
+    drawShapes(context, [shape('M-50,149 C196,52 268,296 503,162 S922,214 1330,106 L1330,209 C1013,290 763,172 541,261 S190,195 -50,272Z', aurora), shape('M-30,234 C216,171 366,286 614,200 S1031,257 1310,152', 'none', '#d2e8f15c', 14)]);
+    oval(context, 213, 182, 34, 34, '#f7f6e6'); oval(context, 203, 175, 8, 6, '#e3e9e3'); oval(context, 225, 195, 5, 5, '#e3e9e3');
+    for (let spark = 0; spark < 29; spark += 1) {
+      const sparkX = 34 + spark * 137 % 1220;
+      const sparkY = 146 + spark * 31 % 120;
+      if (spark % 5 === 0) star(context, sparkX, sparkY, 3, '#eef6f6ba');
+      else oval(context, sparkX, sparkY, 1.4, 1.4, '#eaf4f7a6');
+    }
+    drawShapes(context, [shape('M-60,411 L177,246 L275,332 L447,183 L618,374 L784,236 L918,352 L1103,204 L1340,405 L1340,620 L-60,620Z', '#a3b6d1'), shape('M364,278 L447,183 L530,276 L482,253 L453,269 L425,243Z', '#f1f4f3'), shape('M1018,280 L1103,204 L1205,291 L1139,267 L1117,281 L1078,252Z', '#eef2f2'), shape('M99,301 L177,246 L243,304 L198,291 L174,307 L157,283Z', '#e8eef0'), shape('M-30,434 Q176,351 402,415 Q684,346 944,414 Q1162,348 1310,433 L1310,620 L-30,620Z', '#e1edf0')]);
+    for (const [centerX, bottom, scale] of [[74, 450, 1], [181, 429, 0.68], [1120, 442, 0.86], [1225, 460, 1.13]]) {
+      context.save(); context.translate(centerX, bottom); context.scale(scale, scale);
+      rounded(context, -6, -95, 12, 100, 2, '#9daeb4');
+      for (let tier = 0; tier < 3; tier += 1) {
+        const width = 34 + tier * 14;
+        const top = -191 + tier * 40;
+        drawShapes(context, [shape(`M0,${top} Q${-width * 0.6},${top + 56} ${-width},${top + 79} Q0,${top + 95} ${width},${top + 79} Q${width * 0.6},${top + 56} 0,${top}Z`, '#8eafba'), shape(`M0,${top} Q${-width * 0.48},${top + 39} ${-width * 0.76},${top + 60} Q0,${top + 71} ${width * 0.76},${top + 60}Z`, '#eff5f4')]);
+      }
+      context.restore();
+    }
+    mapArena(context, '#a0bbd0', '#bedbe4', '#e2f0f1', '#fafdf8');
+    drawShapes(context, [shape('M277,478 l58,9 20,-11 57,6 M827,518 l36,-8 43,13 32,-11 M1042,470 l-30,12 12,8', 'none', '#a9cdd45b', 2), shape('M73,521 Q220,572 429,574 M883,572 Q1102,555 1203,520', 'none', '#f4ffff9c', 4)]);
+    for (const [crystalX, crystalY, scale] of [[51, 580, 1], [1207, 577, 0.95], [1110, 596, 0.5]]) {
+      context.save(); context.translate(crystalX, crystalY); context.scale(scale, scale);
+      drawShapes(context, [shape('M-20,4 L-27,-32 L-10,-57 L7,-28 L2,6Z', '#b5d9e4'), shape('M-10,-57 L-10,5 L2,6 L7,-28Z', '#d9f1f5'), shape('M1,7 L7,-20 L23,-33 L32,-6 L20,11Z', '#c1dfe9')]); context.restore();
+    }
+  }
+
+  function cityBackdrop(context) {
+    mapSky(context, ['#f8e9ed', '#b4abc9', '#d5c6df']);
+    oval(context, 975, 183, 41, 41, '#fce5cd');
+    for (let tower = 0; tower < 16; tower += 1) {
+      const left = tower * 86 - 15;
+      const height = 60 + tower * 47 % 129;
+      rounded(context, left, 383 - height, 68, height, [5, 5, 0, 0], '#aaa3bd');
+    }
+    for (let tower = 0; tower < 11; tower += 1) {
+      const left = tower * 124 - 19;
+      const height = 73 + tower * 61 % 151;
+      const top = 421 - height;
+      rounded(context, left, top, 92, height, [6, 6, 0, 0], tower % 2 ? '#8b88a7' : '#9691ae');
+      rounded(context, left + 8, top - 7, 76, 7, 3, '#b2a4c0');
+      for (let row = 0; row < Math.floor(height / 27) - 1; row += 1) {
+        for (let column = 0; column < 4; column += 1) if ((tower + row * 3 + column) % 4 !== 0) rounded(context, left + 12 + column * 19, top + 16 + row * 26, 9, 13, 2, (tower + row) % 3 ? '#e9d7b7ab' : '#bedcddc7');
+      }
+      if (tower % 3 === 1) rounded(context, left + 17, top + 14, 57, 8, 4, '#e3c3de');
+    }
+    context.save(); context.translate(659, 225);
+    drawShapes(context, [shape('M-19,190 L-7,10 L7,10 L19,190Z', '#8786a5'), shape('M0,12 L0,-51', 'none', '#8a85a3', 3)]);
+    oval(context, 0, 6, 34, 11, '#ada7c4'); oval(context, 0, 1, 29, 8, '#d1c6dc'); oval(context, 0, -52, 4, 4, '#ffddc2'); context.restore();
+    context.fillStyle = '#c5bdd0'; context.fillRect(0, 426, 1280, 194);
+    rounded(context, 22, 402, 1236, 15, 5, '#aaa0b6'); rounded(context, 22, 421, 1236, 24, 4, '#ded4df');
+    for (let post = 0; post < 15; post += 1) rounded(context, 33 + post * 86, 375, 6, 39, 2, '#aa9fb6');
+    drawShapes(context, [shape('M24,370 L1254,370', 'none', '#c2b4ce', 5)]);
+    for (const [left, top, color] of [[103, 275, '#f3c2d2'], [1085, 300, '#bee9e6']]) {
+      rounded(context, left, top, 77, 71, 12, '#8986a555', color);
+      rounded(context, left + 4, top + 4, 69, 63, 9, '#b6aac3');
+      if (left < 200) star(context, left + 38, top + 34, 23, '#f7d9ae', 0.08);
+      else heart(context, left + 38, top + 33, 17, '#f4d1e4');
+      rounded(context, left + 36, top + 71, 6, 54, 2, '#9b91ac');
+    }
+    mapArena(context, '#a496b4', '#b8a6c5', '#e1d7e6', '#f6edf4');
+    drawShapes(context, [shape('M71,515 C163,580 1108,580 1210,515', 'none', '#bbe8e5', 5), shape('M127,515 C266,562 1027,562 1144,515', 'none', '#edc3d9', 3)]);
+    context.save(); context.beginPath(); context.ellipse(640, 494, 525, 61, 0, 0, Math.PI * 2); context.clip();
+    for (let line = 0; line < 9; line += 1) drawShapes(context, [shape(`M${180 + line * 119},425 L${114 + line * 131},566`, 'none', '#bdaec43a', 1)]);
+    drawShapes(context, [shape('M97,482 H1181 M97,518 H1181', 'none', '#bdaec43a', 1)]); context.restore();
+    for (const planterX of [27, 1197]) {
+      rounded(context, planterX, 555, 55, 37, [2, 2, 8, 8], '#afa3ba');
+      oval(context, planterX + 28, 548, 32, 18, '#9fb9b1'); oval(context, planterX + 15, 542, 17, 21, '#b4c7b5');
+    }
+  }
+
+  function drawBackdrop(context, map = 'garden') {
+    if (map === 'beach') return beachBackdrop(context);
+    if (map === 'sakura') return sakuraBackdrop(context);
+    if (map === 'snow') return snowBackdrop(context);
+    if (map === 'city') return cityBackdrop(context);
     const sky = context.createLinearGradient(0, 0, 0, 510);
     sky.addColorStop(0, '#ddf0e7'); sky.addColorStop(0.58, '#f3f6d9'); sky.addColorStop(1, '#fff1cd');
     context.fillStyle = sky; context.fillRect(0, 0, 1280, 620);
@@ -1504,14 +1694,39 @@ const Artwork = (() => {
     oval(context, 0, 0, 27, 51, '#b4cc93'); oval(context, -25, 12, 25, 33, '#c0d6a0'); context.restore();
   }
 
-  function drawScenery(context, time, { still = false } = {}) {
-    if (!drawScenery.background) {
+  function drawScenery(context, time, { still = false, map = 'garden' } = {}) {
+    if (!Object.hasOwn(MAPS, map)) map = 'garden';
+    if (!backgrounds.has(map)) {
       const canvas = document.createElement('canvas'); canvas.width = 1280; canvas.height = 620;
-      drawBackdrop(canvas.getContext('2d'));
-      drawScenery.background = canvas;
+      drawBackdrop(canvas.getContext('2d'), map);
+      backgrounds.set(map, canvas);
     }
-    context.drawImage(drawScenery.background, 0, 0);
+    context.drawImage(backgrounds.get(map), 0, 0);
     const motion = still ? 0 : time;
+    if (map !== 'garden') {
+      if (map === 'beach') {
+        for (let wave = 0; wave < 10; wave += 1) {
+          const left = 36 + wave * 137 % 1160 + Math.sin(motion * 0.6 + wave) * 9;
+          const top = 327 + wave * 17 % 80;
+          context.save(); context.translate(left, top);
+          drawShapes(context, [shape('M0,0 q22,-3 46,0', 'none', '#f0f9e875', 2)]);
+          context.restore();
+        }
+      } else if (map === 'sakura' || map === 'snow') {
+        for (let particle = 0; particle < (map === 'snow' ? 22 : 12); particle += 1) {
+          const particleX = (particle * 173 + motion * (map === 'snow' ? 7 : 12)) % 1340 - 30;
+          const particleY = 158 + (particle * 47 + motion * (map === 'snow' ? 13 : 9)) % 250;
+          context.save(); context.translate(particleX, particleY); context.rotate(particle + motion * 0.35);
+          oval(context, 0, 0, map === 'snow' ? 2.5 : 5.5, 2.5, map === 'snow' ? '#ffffff94' : '#fff0f2b5'); context.restore();
+        }
+      } else {
+        for (let light = 0; light < 5; light += 1) {
+          const lightX = (85 + light * 269 + motion * 18) % 1280;
+          rounded(context, lightX, 407 + light % 2 * 14, 10, 2, 1, light % 2 ? '#ffe7b8a3' : '#dcf5efa3');
+        }
+      }
+      return;
+    }
     cloud(context, 222 + Math.sin(motion * 0.13) * 18, 116, 0.88, 0.87);
     cloud(context, 602 + Math.cos(motion * 0.11) * 15, 78, 0.67, 0.86);
     cloud(context, 1097 + Math.sin(motion * 0.1) * 13, 196, 0.64, 0.68);
@@ -1611,7 +1826,7 @@ const Artwork = (() => {
     context.textAlign = 'left';
   }
 
-  return { MODELS, MODEL_VIEWS, ANIMATIONS, modelSvg, poseFor, drawFighter, drawBackdrop, drawScenery, drawProjectile, drawHome, Effects, star, heart, oval, rounded };
+  return { MODELS, MODEL_VIEWS, ANIMATIONS, MAPS, randomMap, modelSvg, poseFor, drawFighter, drawBackdrop, drawScenery, drawProjectile, drawHome, Effects, star, heart, oval, rounded };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = Artwork;
@@ -1760,6 +1975,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Soundtrack
   const dialogs = { help: byId('help-dialog'), pause: byId('pause-dialog'), result: byId('result-dialog') };
   let match = null;
   let currentMode = 'solo';
+  let currentMap = 'garden';
   let visualTime = 0;
   let accumulator = 0;
   let previousTime = 0;
@@ -1818,6 +2034,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Soundtrack
     currentMode = mode;
     closeDialogs();
     match = new Battle.Match({ mode });
+    currentMap = Artwork.randomMap(currentMap);
+    byId('arena').setAttribute('aria-label', `${Artwork.MAPS[currentMap]}对战场地`);
     accumulator = 0;
     effects.clear();
     resultShown = false;
@@ -1841,6 +2059,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Soundtrack
     effects.clear();
     accumulator = 0;
     setGameLayout(false);
+    byId('arena').setAttribute('aria-label', `${Artwork.MAPS.garden}对战场地`);
     audio.setMusic(false);
     byId('start-solo').focus({ preventScroll: true });
     announce('已返回模式选择。请选择人机对战或双人对战。');
@@ -1944,7 +2163,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Soundtrack
       Artwork.drawHome(context, visualTime, reduced);
       return;
     }
-    Artwork.drawScenery(context, visualTime, { still: reduced });
+    Artwork.drawScenery(context, visualTime, { still: reduced, map: currentMap });
     context.save();
     if (effects.shake > 0 && !reduced) context.translate(Math.sin(visualTime * 98) * effects.shake, Math.cos(visualTime * 121) * effects.shake * 0.5);
     for (const fighter of [...match.fighters].sort((first, second) => first.y - second.y)) Artwork.drawFighter(context, fighter, visualTime);
@@ -2020,12 +2239,12 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Soundtrack
   /* 只读诊断供自动验收与故障定位使用，不提供改血量或跳过对局接口。 */
   window.LuluGame = Object.freeze({
     snapshot: () => match ? {
-      mode: match.mode, phase: match.phase, paused: match.paused, frame: match.frame, remaining: match.remaining,
+      mode: match.mode, map: currentMap, phase: match.phase, paused: match.paused, frame: match.frame, remaining: match.remaining,
       countdown: match.countdown, projectiles: match.projectiles.length, effects: effects.items.length,
       result: match.result ? structuredClone(match.result) : null,
       fighters: match.fighters.map(fighter => ({ id: fighter.id, kind: fighter.kind, x: fighter.x, y: fighter.y, health: fighter.health, state: fighter.state, facing: fighter.facing, jumps: fighter.jumps, grounded: fighter.grounded, cooldown: fighter.cooldown, guarding: fighter.guarding, running: fighter.running, stats: { ...fighter.stats } })),
       audio: { enabled: audio.enabled, state: audio.context?.state ?? 'locked', music: Boolean(audio.music) }
-    } : { phase: 'home', audio: { enabled: audio.enabled, state: audio.context?.state ?? 'locked' } },
+    } : { phase: 'home', map: 'garden', audio: { enabled: audio.enabled, state: audio.context?.state ?? 'locked' } },
     get ready() { return !globalThis.Character3D || Character3D.status().state !== 'loading'; }
   });
   requestAnimationFrame(animate);

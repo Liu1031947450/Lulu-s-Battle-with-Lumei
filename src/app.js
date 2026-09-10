@@ -16,6 +16,7 @@
   const dialogs = { help: byId('help-dialog'), pause: byId('pause-dialog'), result: byId('result-dialog') };
   let match = null;
   let currentMode = 'solo';
+  let currentMap = 'garden';
   let visualTime = 0;
   let accumulator = 0;
   let previousTime = 0;
@@ -74,6 +75,8 @@
     currentMode = mode;
     closeDialogs();
     match = new Battle.Match({ mode });
+    currentMap = Artwork.randomMap(currentMap);
+    byId('arena').setAttribute('aria-label', `${Artwork.MAPS[currentMap]}对战场地`);
     accumulator = 0;
     effects.clear();
     resultShown = false;
@@ -97,6 +100,7 @@
     effects.clear();
     accumulator = 0;
     setGameLayout(false);
+    byId('arena').setAttribute('aria-label', `${Artwork.MAPS.garden}对战场地`);
     audio.setMusic(false);
     byId('start-solo').focus({ preventScroll: true });
     announce('已返回模式选择。请选择人机对战或双人对战。');
@@ -200,7 +204,7 @@
       Artwork.drawHome(context, visualTime, reduced);
       return;
     }
-    Artwork.drawScenery(context, visualTime, { still: reduced });
+    Artwork.drawScenery(context, visualTime, { still: reduced, map: currentMap });
     context.save();
     if (effects.shake > 0 && !reduced) context.translate(Math.sin(visualTime * 98) * effects.shake, Math.cos(visualTime * 121) * effects.shake * 0.5);
     for (const fighter of [...match.fighters].sort((first, second) => first.y - second.y)) Artwork.drawFighter(context, fighter, visualTime);
@@ -276,12 +280,12 @@
   /* 只读诊断供自动验收与故障定位使用，不提供改血量或跳过对局接口。 */
   window.LuluGame = Object.freeze({
     snapshot: () => match ? {
-      mode: match.mode, phase: match.phase, paused: match.paused, frame: match.frame, remaining: match.remaining,
+      mode: match.mode, map: currentMap, phase: match.phase, paused: match.paused, frame: match.frame, remaining: match.remaining,
       countdown: match.countdown, projectiles: match.projectiles.length, effects: effects.items.length,
       result: match.result ? structuredClone(match.result) : null,
       fighters: match.fighters.map(fighter => ({ id: fighter.id, kind: fighter.kind, x: fighter.x, y: fighter.y, health: fighter.health, state: fighter.state, facing: fighter.facing, jumps: fighter.jumps, grounded: fighter.grounded, cooldown: fighter.cooldown, guarding: fighter.guarding, running: fighter.running, stats: { ...fighter.stats } })),
       audio: { enabled: audio.enabled, state: audio.context?.state ?? 'locked', music: Boolean(audio.music) }
-    } : { phase: 'home', audio: { enabled: audio.enabled, state: audio.context?.state ?? 'locked' } },
+    } : { phase: 'home', map: 'garden', audio: { enabled: audio.enabled, state: audio.context?.state ?? 'locked' } },
     get ready() { return !globalThis.Character3D || Character3D.status().state !== 'loading'; }
   });
   requestAnimationFrame(animate);

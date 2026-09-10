@@ -43,11 +43,16 @@ try {
     report.screenshots.push(filename);
   }
   async function freshDuo() {
+    const previousMap = (await snapshot()).map;
     if ((await snapshot()).phase === 'home') await click('start-duo');
     else if (await page.locator('#result-dialog').evaluate(dialog => dialog.open)) await click('play-again');
     else await click('quick-restart');
+    const selectedMap = (await snapshot()).map;
+    assert.notEqual(selectedMap, previousMap);
+    assert.equal(await page.locator('#arena').getAttribute('aria-label'), await page.evaluate(() => `${Artwork.MAPS[LuluGame.snapshot().map]}对战场地`));
     await advance(3220);
     assert.equal((await snapshot()).phase, 'fighting');
+    assert.equal((await snapshot()).map, selectedMap);
   }
   async function moveCloser() {
     await page.keyboard.down('KeyD'); await page.keyboard.down('ArrowLeft');
@@ -72,6 +77,45 @@ try {
     report.models = modelStatus;
   });
 
+  await check('五张不同背景均可离线绘制、缓存复用、减少动态且随机不连续重复', async () => {
+    const scenery = await page.evaluate(() => {
+      const maps = Object.keys(Artwork.MAPS);
+      const canvas = document.createElement('canvas');
+      canvas.width = 1280; canvas.height = 620;
+      const context = canvas.getContext('2d');
+      const render = (map, time = 2, still = false) => {
+        Artwork.drawScenery(context, time, { map, still });
+        return canvas.toDataURL('image/png');
+      };
+      const images = maps.map(map => ({ map, image: render(map) }));
+      return {
+        maps,
+        choices: [undefined, 'unknown', ...maps].map(previous => {
+          const available = maps.filter(map => map !== previous);
+          return { available, selected: available.map((map, index) => Artwork.randomMap(previous, () => index / available.length)) };
+        }),
+        images: images.map(({ map, image }) => ({
+          map, image, cached: render(map) === image, animated: render(map, 8) !== image,
+          still: render(map, 2, true) === render(map, 8, true)
+        })),
+        fallback: render('unknown') === render('garden')
+      };
+    });
+    assert.deepEqual(scenery.maps, ['garden', 'beach', 'sakura', 'snow', 'city']);
+    for (const choice of scenery.choices) assert.deepEqual(choice.selected, choice.available);
+    assert.equal(new Set(scenery.images.map(entry => entry.image)).size, 5);
+    assert.equal(scenery.fallback, true);
+    for (const entry of scenery.images) {
+      assert.equal(entry.cached, true, `${entry.map} 缓存不串图`);
+      assert.equal(entry.animated, true, `${entry.map} 背景动态`);
+      assert.equal(entry.still, true, `${entry.map} 减少动态`);
+      const filename = `${engine}-map-${entry.map}.png`;
+      await writeFile(path.join(output, filename), Buffer.from(entry.image.split(',')[1], 'base64'));
+      report.screenshots.push(filename);
+    }
+    assert.equal((await snapshot()).map, 'garden');
+  });
+
   await check('操作指南、Escape 关闭、声音解锁和静音开关', async () => {
     await click('help-open');
     assert.equal(await page.locator('#help-dialog').evaluate(dialog => dialog.open), true);
@@ -86,12 +130,15 @@ try {
 
   await check('双人模式三秒倒计时和初始 HUD', async () => {
     await click('start-duo');
+    const selectedMap = (await snapshot()).map;
+    assert.notEqual(selectedMap, 'garden');
     assert.equal((await snapshot()).phase, 'countdown');
     await advance(1600);
     assert.equal((await snapshot()).phase, 'countdown');
     assert.deepEqual((await snapshot()).fighters.map(fighter => fighter.health), [100, 100]);
     await advance(1620);
     assert.equal((await snapshot()).phase, 'fighting');
+    assert.equal((await snapshot()).map, selectedMap);
     assert.equal(await page.locator('#opponent-label').innerText(), 'P2 · 玩家');
     await capture('duo');
   });
@@ -207,6 +254,7 @@ try {
     await advance(4000);
     assert.equal((await snapshot()).frame, paused.frame);
     assert.equal((await snapshot()).remaining, paused.remaining);
+    assert.equal((await snapshot()).map, paused.map);
     await capture('pause');
     await click('resume-game'); await advance(150);
     assert.equal((await snapshot()).fighters[0].x, paused.fighters[0].x);
@@ -218,6 +266,7 @@ try {
     assert.equal((await snapshot()).paused, true);
     await click('resume-game');
     assert.equal((await snapshot()).paused, false);
+    assert.equal((await snapshot()).map, paused.map);
   });
 
   await check('完整双人对局通过真实键盘输入打至 KO，胜利弹窗可重开', async () => {
@@ -246,6 +295,7 @@ try {
     await capture('duo-result');
     await click('play-again');
     const restarted = await snapshot();
+    assert.notEqual(restarted.map, completed.map);
     assert.equal(restarted.phase, 'countdown');
     assert.deepEqual(restarted.fighters.map(fighter => fighter.health), [100, 100]);
     assert.deepEqual(restarted.fighters.map(fighter => fighter.cooldown), [0, 0]);
@@ -262,10 +312,14 @@ try {
     await capture('draw-result');
     await click('result-home');
     assert.equal((await snapshot()).phase, 'home');
+    assert.equal((await snapshot()).map, 'garden');
+    assert.equal(await page.locator('#arena').getAttribute('aria-label'), '橘子云朵花园对战场地');
   });
 
   await check('完整人机对局：AI 主动移动攻防，真实键盘玩家参与并正常结算', async () => {
     await click('start-solo'); await advance(3220);
+    const selectedMap = (await snapshot()).map;
+    assert.ok(await page.evaluate(() => Object.hasOwn(Artwork.MAPS, LuluGame.snapshot().map)));
     assert.equal(await page.locator('#opponent-label').innerText(), 'CPU · 中等');
     const observed = new Set();
     for (let turn = 0; turn < 270; turn += 1) {
@@ -284,6 +338,7 @@ try {
       if (turn === 12) await capture('solo-action');
     }
     const completed = await snapshot();
+    assert.equal(completed.map, selectedMap);
     assert.equal(completed.phase, 'finished');
     assert.ok(completed.fighters[0].stats.hits > 0);
     assert.ok(completed.fighters[1].stats.hits > 0);
@@ -297,14 +352,21 @@ try {
   await check('连续重开、返回主页和键盘 R 重开不遗留状态', async () => {
     await click('play-again');
     for (let attempt = 0; attempt < 4; attempt += 1) {
+      const previousMap = (await snapshot()).map;
       await advance(500); await press('KeyR');
       const state = await snapshot();
+      assert.notEqual(state.map, previousMap);
       assert.equal(state.phase, 'countdown'); assert.equal(state.remaining, 5400);
       assert.deepEqual(state.fighters.map(fighter => fighter.health), [100, 100]);
       assert.equal(state.projectiles, 0); assert.equal(state.effects, 0);
     }
+    await press('Escape');
+    const previousMap = (await snapshot()).map;
+    await click('pause-restart');
+    assert.notEqual((await snapshot()).map, previousMap);
     await press('Escape'); await click('pause-home');
     assert.equal((await snapshot()).phase, 'home');
+    assert.equal((await snapshot()).map, 'garden');
   });
 
   await check('五种窗口尺寸、缩小动态效果、键盘焦点与无横向溢出', async () => {
