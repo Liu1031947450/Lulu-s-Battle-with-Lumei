@@ -1,0 +1,20 @@
+{
+  "name": "lulu-and-lumei",
+  "version": "1.0.0",
+  "private": true,
+  "description": "噜噜大战噜妹 · 完整离线双人 / 人机格斗游戏",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/engine.test.cjs tests/input.test.cjs",
+    "test:browser": "node tests/browser.mjs",
+    "assets": "node scripts/export-assets.mjs",
+    "check": "npm run build && npm test && npm run test:browser",
+    "package": "node scripts/package.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

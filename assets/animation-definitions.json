@@ -1,0 +1,86 @@
+{
+  "format": "layered-2d",
+  "source": "../src/art.js",
+  "animations": {
+    "idle": {
+      "frames": 8,
+      "fps": 8,
+      "loop": true
+    },
+    "walk": {
+      "frames": 8,
+      "fps": 12,
+      "loop": true
+    },
+    "run": {
+      "frames": 8,
+      "fps": 18,
+      "loop": true
+    },
+    "jump": {
+      "frames": 8,
+      "fps": 12,
+      "loop": false
+    },
+    "double-jump": {
+      "frames": 8,
+      "fps": 20,
+      "loop": false
+    },
+    "crouch": {
+      "frames": 6,
+      "fps": 12,
+      "loop": false
+    },
+    "rise": {
+      "frames": 6,
+      "fps": 30,
+      "loop": false
+    },
+    "backstep": {
+      "frames": 8,
+      "fps": 12,
+      "loop": true
+    },
+    "attack": {
+      "frames": 8,
+      "fps": 18,
+      "loop": false
+    },
+    "skill": {
+      "frames": 12,
+      "fps": 18,
+      "loop": false
+    },
+    "guard": {
+      "frames": 6,
+      "fps": 10,
+      "loop": true
+    },
+    "hit": {
+      "frames": 6,
+      "fps": 18,
+      "loop": false
+    },
+    "stun": {
+      "frames": 6,
+      "fps": 12,
+      "loop": true
+    },
+    "defeat": {
+      "frames": 8,
+      "fps": 12,
+      "loop": false
+    },
+    "victory": {
+      "frames": 8,
+      "fps": 10,
+      "loop": true
+    },
+    "draw": {
+      "frames": 6,
+      "fps": 8,
+      "loop": true
+    }
+  }
+}

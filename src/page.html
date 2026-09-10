@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#faf7ef">
+  <meta name="description" content="噜噜大战噜妹：一场软乎乎的对决。自制卡通角色，完整人机与本地双人格斗，打开即可离线游玩。">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>噜噜大战噜妹 · 一场软乎乎的对决</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='19' fill='%23fff1ce'/%3E%3Cpath d='M32 17Q25 5 42 7Q45 18 32 17' fill='%2399b76d'/%3E%3Cpath d='M12 35C12 14 51 15 52 35C56 59 8 59 12 35' fill='%23f9b458'/%3E%3Cpath d='M20 29Q21 24 26 25' fill='none' stroke='%23ffe3a3' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <style>/*__GAME_CSS__*/</style>
+</head>
+<body>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-orange" viewBox="0 0 32 32"><path d="M16 8c-3-6 2-7 7-6 0 5-3 7-7 6Z" fill="#93b271"/><path d="M5 18C4 7 26 7 27 18c2 14-24 14-22 0Z" fill="#f6b65f" stroke="#d69343" stroke-width="1.4"/><path d="M9 16q1-4 5-4" fill="none" stroke="#ffe3a4" stroke-width="2.5" stroke-linecap="round"/></symbol>
+    <symbol id="icon-sound" viewBox="0 0 24 24"><path d="m11 5-5 4H3v6h3l5 4V5Zm4 3c3 2 3 6 0 8m3-11c5 4 5 10 0 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-muted" viewBox="0 0 24 24"><path d="m11 5-5 4H3v6h3l5 4V5Zm5 4 5 6m0-6-5 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 9a2.6 2.6 0 0 1 5 1c0 2-2.5 2-2.5 4m0 3h.01" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M4 18C-1 7 10 4 20 4c0 12-4 17-12 15m-4 2L16 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 21v-3a7 7 0 0 1 14 0v3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="icon-people" viewBox="0 0 24 24"><circle cx="8.5" cy="7.5" r="3.3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2 20v-2a6.5 6.5 0 0 1 13 0v2m1-16a3.5 3.5 0 0 1 0 7m3 3a6 6 0 0 1 3 5v1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="icon-pause" viewBox="0 0 24 24"><path d="M8 5v14m8-14v14" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/></symbol>
+    <symbol id="icon-reset" viewBox="0 0 24 24"><path d="M4 9a8 8 0 1 1 0 6m0-11v5h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M12 20C-5 10 5-2 12 7c7-9 17 3 0 13Z" fill="currentColor"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <header class="topbar">
+    <button class="brand" id="brand-home" aria-label="噜噜大战噜妹，返回模式选择">
+      <span class="brand-mark"><svg><use href="#icon-orange"/></svg></span>
+      <span class="brand-copy"><strong>噜噜大战噜妹<span class="brand-dot">.</span></strong><small>LULU & LUMEI</small></span>
+    </button>
+    <nav class="header-actions" aria-label="游戏设置">
+      <span class="offline-pill"><span></span>离线也能开心玩</span>
+      <button class="icon-button" id="sound-toggle" aria-label="关闭声音" aria-pressed="false" title="声音开关"><svg><use id="sound-icon" href="#icon-sound"/></svg></button>
+      <button class="guide-button" id="help-open"><svg><use href="#icon-help"/></svg><span>操作指南</span></button>
+    </nav>
+  </header>
+
+  <main class="main-shell">
+    <section class="intro" id="intro" aria-labelledby="page-heading">
+      <div class="eyebrow"><span></span>一点点好胜，很多很多可爱<span></span></div>
+      <h1 id="page-heading">来一场<span class="squishy-word">软乎乎<svg viewBox="0 0 180 14" aria-hidden="true"><path d="M4 8Q79 0 175 8M18 12Q86 6 156 11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span>的对决</h1>
+      <p>和噜噜、噜妹一起，把今天的烦恼轻轻打飞。</p>
+    </section>
+
+    <section class="arena" id="arena" aria-label="橘子云朵花园对战场地">
+      <canvas id="game-canvas" width="1280" height="620" tabindex="0" aria-label="格斗游戏画面。使用下方所列键盘操作；按 Escape 暂停。">你的浏览器需要支持 Canvas 才能运行游戏。</canvas>
+      <div class="garden-label" id="garden-label"><svg><use href="#icon-leaf"/></svg><span>橘子云朵花园</span><span class="garden-divider"></span><small>今天也是好天气</small></div>
+      <div class="home-sticker" id="home-sticker"><span>不许不开心</span><svg viewBox="0 0 26 28" aria-hidden="true"><path d="m13 2 2.6 8 8.4.5-6.7 5.1 2.2 8.1-6.5-4.9-6.7 4.9 2.4-8.1L2 10.5l8.5-.5Z" fill="#eab978" stroke="#c9955a" stroke-width="1.2"/></svg></div>
+
+      <div class="battle-hud" id="battle-hud" hidden>
+        <section class="fighter-hud fighter-one" aria-label="噜噜状态">
+          <canvas class="portrait" id="portrait-0" width="120" height="120" aria-hidden="true"></canvas>
+          <div class="fighter-meters">
+            <div class="fighter-heading"><strong>噜噜</strong><span>P1 · 玩家</span><b id="health-number-0">100</b></div>
+            <div class="health-track" id="health-0" role="progressbar" aria-label="噜噜生命值" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="health-ghost" id="health-ghost-0"></div><div class="health-fill" id="health-fill-0"></div></div>
+            <div class="skill-meter"><svg><use href="#icon-orange"/></svg><span>橘子冲冲</span><div class="cooldown-track"><div id="cooldown-0"></div></div><small id="cooldown-label-0">准备就绪</small></div>
+          </div>
+        </section>
+        <div class="round-timer"><span id="match-mode">人机对战</span><strong id="timer" aria-label="剩余90秒">90</strong><small>开心第一</small></div>
+        <section class="fighter-hud fighter-two" aria-label="噜妹状态">
+          <canvas class="portrait" id="portrait-1" width="120" height="120" aria-hidden="true"></canvas>
+          <div class="fighter-meters">
+            <div class="fighter-heading"><strong>噜妹</strong><span id="opponent-label">CPU · 中等</span><b id="health-number-1">100</b></div>
+            <div class="health-track" id="health-1" role="progressbar" aria-label="噜妹生命值" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="health-ghost" id="health-ghost-1"></div><div class="health-fill" id="health-fill-1"></div></div>
+            <div class="skill-meter"><svg class="pink-icon"><use href="#icon-heart"/></svg><span>爱心泡泡</span><div class="cooldown-track"><div id="cooldown-1"></div></div><small id="cooldown-label-1">准备就绪</small></div>
+          </div>
+        </section>
+      </div>
+      <div class="countdown-overlay" id="countdown-overlay" hidden aria-live="polite"><span>准备好了吗？</span><strong id="countdown-number">3</strong><small>深呼吸，放轻松</small></div>
+      <div class="fight-banner" id="fight-banner" hidden></div>
+      <div class="arena-corner" id="arena-corner" hidden><span class="status-dot"></span><span id="arena-status">正在对战</span><button id="pause-open" class="pause-button" aria-label="暂停游戏"><svg><use href="#icon-pause"/></svg><span>暂停</span><kbd>Esc</kbd></button></div>
+      <div class="play-hint" id="play-hint"><span class="tiny-star">✦</span> 没有输家，只有越来越开心的我们 <span class="tiny-star">✦</span></div>
+    </section>
+
+    <section class="mode-selection" id="mode-selection" aria-label="选择对战模式">
+      <button class="mode-card mode-solo" id="start-solo">
+        <span class="mode-icon"><svg><use href="#icon-person"/></svg><span class="mini-spark">✦</span></span>
+        <span class="mode-copy"><span class="mode-meta">SOLO PLAY <span>中等难度</span></span><strong>人机对战<span class="mode-description">一个人，也能玩得很开心</span></strong></span>
+        <span class="mode-arrow"><svg><use href="#icon-arrow"/></svg></span>
+      </button>
+      <button class="mode-card mode-duo" id="start-duo">
+        <span class="mode-icon"><svg><use href="#icon-people"/></svg><span class="mini-spark">+</span></span>
+        <span class="mode-copy"><span class="mode-meta">PLAY TOGETHER <span>同屏双人</span></span><strong>双人对战<span class="mode-description">叫上你的搭子，快乐加倍</span></strong></span>
+        <span class="mode-arrow"><svg><use href="#icon-arrow"/></svg></span>
+      </button>
+    </section>
+
+    <section class="battle-controls" id="battle-controls" aria-label="对战操作快捷说明" hidden>
+      <div class="control-summary"><span class="player-badge">P1</span><div><strong>噜噜</strong><span><kbd>A</kbd><kbd>D</kbd>移动　<kbd>W</kbd>跳跃　<kbd>S</kbd>蹲下</span><span><kbd>J</kbd>普攻　<kbd>K</kbd>技能　<kbd>L</kbd>防御</span></div></div>
+      <div class="control-summary second-player"><span class="player-badge">P2</span><div><strong id="second-controls-title">噜妹 · 人机操作</strong><span><kbd>←</kbd><kbd>→</kbd>移动　<kbd>↑</kbd>跳跃　<kbd>↓</kbd>蹲下</span><span><kbd>1</kbd>普攻　<kbd>2</kbd>技能　<kbd>3</kbd>防御</span></div></div>
+      <button class="restart-button" id="quick-restart"><svg><use href="#icon-reset"/></svg>重新开始<kbd>R</kbd></button>
+    </section>
+    <footer class="page-footer"><span><svg><use href="#icon-check"/></svg>无需安装</span><i>·</i><span>支持人机 / 本地双人</span><i>·</i><span>打开即玩，开心就好</span><span class="keyboard-note">推荐桌面键盘游玩</span></footer>
+    <p class="sr-only" id="announcer" aria-live="polite" aria-atomic="true"></p>
+    <p id="fatal-error" class="error-message" role="alert" hidden></p>
+    <noscript><p class="error-message">请在浏览器中允许 JavaScript 后重新打开游戏。游戏完全离线，不会联网。</p></noscript>
+  </main>
+
+  <dialog class="modal help-modal" id="help-dialog" aria-labelledby="help-title">
+    <button class="close-button" id="help-close" aria-label="关闭操作指南"><svg><use href="#icon-close"/></svg></button>
+    <div class="modal-eyebrow">A LITTLE GUIDE</div>
+    <h2 id="help-title">快乐过招，很简单</h2>
+    <p class="modal-subtitle">轻轻按下键盘，可爱即刻发生。</p>
+    <div class="help-columns">
+      <section class="help-player"><h3><span class="player-badge">P1</span>噜噜</h3><dl><div><dt>左右移动</dt><dd><kbd>A</kbd><kbd>D</kbd></dd></div><div><dt>跳跃 / 二段跳</dt><dd><kbd>W</kbd></dd></div><div><dt>下蹲 / 松开起身</dt><dd><kbd>S</kbd></dd></div><div><dt>普通攻击</dt><dd><kbd>J</kbd></dd></div><div><dt>橘子冲冲</dt><dd><kbd>K</kbd></dd></div><div><dt>按住防御</dt><dd><kbd>L</kbd></dd></div></dl></section>
+      <section class="help-player help-player-two"><h3><span class="player-badge">P2</span>噜妹</h3><dl><div><dt>左右移动</dt><dd><kbd>←</kbd><kbd>→</kbd></dd></div><div><dt>跳跃 / 二段跳</dt><dd><kbd>↑</kbd></dd></div><div><dt>下蹲 / 松开起身</dt><dd><kbd>↓</kbd></dd></div><div><dt>普通攻击</dt><dd><kbd>小键盘 1</kbd></dd></div><div><dt>爱心泡泡</dt><dd><kbd>小键盘 2</kbd></dd></div><div><dt>按住防御</dt><dd><kbd>小键盘 3</kbd></dd></div></dl></section>
+    </div>
+    <div class="guide-tips"><p><strong>跑起来：</strong>快速双击同一方向并按住。空中松开跳跃键再按一次，可以二段跳。</p><p><strong>小技巧：</strong>正面地面防御减伤 80%；技能冷却 3 秒。每局 90 秒，血量多的一方获胜。</p><p><strong>没有小键盘？</strong>噜妹也支持主键区 <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd>。<kbd>Esc</kbd> 暂停，<kbd>R</kbd> 重开。</p></div>
+    <button class="primary-button" id="help-done">学会啦，出发！<svg><use href="#icon-arrow"/></svg></button>
+    <p class="help-disclaimer">自制二维同人游戏 · 根据公开形象参考重绘，非官方授权作品</p>
+  </dialog>
+
+  <dialog class="modal pause-modal" id="pause-dialog" aria-labelledby="pause-title">
+    <span class="modal-orange"><svg><use href="#icon-orange"/></svg></span>
+    <div class="modal-eyebrow">TAKE A LITTLE BREAK</div><h2 id="pause-title">先歇一小会儿</h2><p class="modal-subtitle" id="pause-reason">喝口水，快乐不会溜走。</p>
+    <button class="primary-button" id="resume-game">继续开心过招<svg><use href="#icon-arrow"/></svg></button>
+    <button class="secondary-button" id="pause-restart">重新开始这一局</button>
+    <button class="text-button" id="pause-home">返回模式选择</button>
+  </dialog>
+
+  <dialog class="modal result-modal" id="result-dialog" aria-labelledby="result-title">
+    <div class="result-confetti" aria-hidden="true">✦<span>✧</span>✦</div>
+    <canvas id="winner-portrait" width="260" height="200" aria-hidden="true"></canvas>
+    <div class="modal-eyebrow" id="result-eyebrow">A LOVELY VICTORY</div><h2 id="result-title">噜噜获胜！</h2><p class="modal-subtitle" id="result-message">赢了对决，也赢了一整天的好心情。</p>
+    <div class="result-stats"><div><strong id="result-hits">0</strong><span>有效命中</span></div><div><strong id="result-health">100</strong><span>剩余血量</span></div><div><strong id="result-blocks">0</strong><span>成功格挡</span></div></div>
+    <button class="primary-button" id="play-again">再来一局<svg><use href="#icon-reset"/></svg></button><button class="text-button" id="result-home">返回模式选择</button>
+  </dialog>
+  <!--__GAME_SCRIPT__-->
+</body>
+</html>
