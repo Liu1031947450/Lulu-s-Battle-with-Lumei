@@ -2,6 +2,21 @@
 
 验收日期：2026 年 9 月 11 日。环境：macOS / Apple Silicon，Node.js 22.22.0，Playwright 1.63.0。
 
+## 房间联机版本验收
+
+- 构建成功；Node **46 / 46** 通过，其中新增 8 组房间、输入、消息校验与生命周期测试。原战斗、输入、美术及音频模块未修改。
+- Chrome 153.0.8010.37 离线流程 **30 / 30** 通过，包含 18 种窗口尺寸、实际 WebGL 2、键盘完整对局、暂停、设置、声音及二维回退。未点击联机时没有 HTTP/HTTPS 请求，也不依赖联机服务。
+- 真实公共 PeerJS 服务联机 **9 / 9** 通过：两个独立 Chrome 进程通过房间码／邀请链接建联，验证 WASD 操控、普攻、防御、技能、KO 结果一致、同帧暂停、双方确认继续／重开、第三人被拒绝、复制失败提示、退出清理及回到本地对战。
+- 已验证新邀请链接在同一页面内也会预填；准备后切出窗口会撤回继续确认，不能由另一方在玩家离开时单方面恢复。568×320 联机页面无溢出。
+- `npm audit --registry=https://registry.npmjs.org --audit-level=high` 返回 **0 vulnerabilities**；默认 npm 镜像不提供审计接口，未修改项目或用户的镜像配置。
+- 证据：`artifacts/unit-tests.tap`、`artifacts/chromium-report.json`、`artifacts/online-report.json`，以及 `online-home.png`、`online-room.png`、`online-battle.png`。报告内含被验收 HTML 的 SHA-256。
+- 发布网页可用 `ONLINE_URL=https://liu1031947450.github.io/Lulu-s-Battle-with-Lumei/ npm run test:online` 重复验收，结果另存 `artifacts/online-live-report.json`。
+- **边界：本轮联机只验证同一台电脑的两个独立浏览器进程，没有验证跨网络／运营商 NAT 穿透。** 没有付费 TURN，中继受限或公共服务不可用时可能无法建联；没有竞技级反作弊、回滚预测、断线续局或房主迁移。Firefox / WebKit 的本轮完整联机未验证。
+
+## 联机改造前的布局版记录
+
+以下表格、哈希和跨内核记录保留为历史证据，不代表新增联机功能已经在这些内核或设备上验收。
+
 本次在倒计时、中文女声与四档难度设置基础上更新自适应布局：场地按可用宽高等比缩放，短屏压缩留白，长弹窗保留内部滚动。布局改动未涉及角色资产、战斗 / 输入逻辑、五张地图或音频资源。
 
 重新执行构建、原生测试、Chrome / WebKit 完整流程与三内核布局专项。Firefox 完整流程未完成，不能视为全量通过；GLB 标准验证、独立文件复制、三维预览交互、图集边界与 FPS 专项沿用 9 月 10 日验收记录，本次未重跑这些专项。

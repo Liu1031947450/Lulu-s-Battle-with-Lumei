@@ -59,7 +59,7 @@ h1 { font-size: clamp(25px, 3vw, 39px); letter-spacing: 2.3px; font-weight: 850;
 .home-sticker svg { width: 22px; height: 22px; }
 .play-hint { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; color: #8e9a73; letter-spacing: 1.3px; font-size: 9px; pointer-events: none; }
 .tiny-star { color: #b1b885; margin: 0 8px; font-size: 10px; }
-.mode-selection { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; margin-top: 21px; }
+.mode-selection { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 17px; margin-top: 21px; }
 .mode-card { border-radius: 17px; border: 1px solid #e8d2a9; background: #f7e7c8; display: flex; align-items: center; padding: 17px 20px; text-align: left; gap: 16px; box-shadow: 0 3px 0 #e6d4b257; transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease; }
 .mode-card:hover { transform: translateY(-3px); box-shadow: 0 7px 0 #e6d4b24d; background: #f5e1b9; }
 .mode-icon { width: 48px; height: 48px; border-radius: 14px; background: #fffaeb9c; border: 1px solid #fffcf194; display: grid; place-items: center; color: #a18154; position: relative; flex-shrink: 0; }
@@ -210,6 +210,39 @@ dd { margin: 0; white-space: nowrap; }
 .secondary-button, .fighter-heading > b, .skill-meter, .result-stats span { color: #7a6b50; }
 .fighter-heading > span, .arena-corner { color: #647350; }
 
+.mode-selection .mode-copy strong { flex-direction: column; align-items: flex-start; gap: 5px; }
+.mode-online { background: #e7edf0; border-color: #cad9df; box-shadow: 0 3px 0 #cad9df57; }
+.mode-online:hover { background: #dbe7ed; box-shadow: 0 7px 0 #cad9df4d; }
+.mode-online .mode-icon { color: #698393; background: #f4f8fa; }
+.mode-online .mode-meta, .mode-online .mode-description { color: #637b86; }
+.online-modal { width: 470px; }
+.online-modal label { display: block; text-align: left; font-size: 12px; margin: 12px 0 8px; }
+.online-modal input { font: inherit; color: var(--ink); border: 1px solid #d8d0be; border-radius: 10px; padding: 12px; background: #fffdf7; min-width: 0; width: 100%; }
+.online-modal input:focus-visible { outline: 3px solid #668b72; outline-offset: 2px; }
+.join-room-form { margin-top: 20px; }
+.room-input-row, .room-share { display: flex; align-items: center; gap: 10px; }
+.room-input-row input { flex: 1; width: 0; text-transform: uppercase; font-size: 14px; }
+.room-input-row .secondary-button, .room-share .secondary-button { margin: 0; width: auto; padding: 12px; font-size: 12px; }
+.room-share .secondary-button { flex: 1; }
+.online-modal .created-code { text-align: center; font: 700 29px ui-monospace, monospace; letter-spacing: 5px; margin-bottom: 12px; }
+.online-modal #invite-copy { margin-top: 10px; font-size: 11px; }
+.online-status { min-height: 40px; font-size: 13px; line-height: 1.7; color: #536d5b; margin: 18px 0 0; overflow-wrap: anywhere; }
+.online-note { font-size: 11px; line-height: 1.8; color: #82745e; margin: 18px 0 0; }
+.online-match-status { text-align: center; margin: 8px 0 0; font-size: 11px; color: #637b86; }
+
+@media (max-width: 1050px) {
+  .mode-selection .mode-icon { display: none; }
+  .mode-selection .mode-arrow { display: none; }
+}
+
+@media (max-width: 760px) {
+  .mode-selection { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mode-online { grid-column: 1 / -1; justify-content: center; padding-block: 8px; }
+  .mode-online .mode-copy strong { flex-direction: row; align-items: center; gap: 10px; }
+  .mode-online .mode-meta { display: none; }
+  .online-match-status { font-size: 9px; }
+}
+
 @media (min-width: 1450px) and (min-height: 960px) {
   .topbar, .main-shell { width: 1190px; }
   .topbar { padding-top: 30px; }
@@ -344,7 +377,8 @@ dd { margin: 0; white-space: nowrap; }
   .brand-copy small, .offline-pill, .intro .eyebrow, .intro p, .page-footer { display: none; }
   .intro { padding-block: 2px 6px; }
   h1 { font-size: 22px; line-height: 1.3; margin-block: 2px; }
-  .mode-selection { margin-top: 8px; }
+  .mode-selection { margin-top: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mode-online { grid-column: auto; }
   .mode-card { padding: 8px 12px; gap: 10px; }
   .mode-icon { width: 34px; height: 34px; }
   .mode-copy strong { font-size: 15px; }
