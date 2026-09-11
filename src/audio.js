@@ -1,6 +1,7 @@
 /* 原创短旋律与合成音效。浏览器播放和 WAV 导出复用同一合成器。 */
 const Soundtrack = (() => {
   const RATE = 22050;
+  const VOICES = Object.freeze(/*__VOICE_PCM__*/{});
   const CLIPS = {
     swing: [[0, 490, 0.055, 0.21], [0.035, 340, 0.07, 0.12]],
     hit: [[0, 190, 0.08, 0.35], [0.025, 410, 0.11, 0.22], [0.07, 640, 0.07, 0.12]],
@@ -55,13 +56,15 @@ const Soundtrack = (() => {
   }
 
   class Player {
-    constructor() {
+    constructor(voices = VOICES) {
       this.context = null;
       this.master = null;
       this.buffers = new Map();
       this.music = null;
       this.enabled = true;
       this.active = false;
+      this.voices = voices;
+      this.voice = null;
     }
 
     async unlock() {
@@ -83,7 +86,13 @@ const Soundtrack = (() => {
 
     buffer(name) {
       if (!this.buffers.has(name)) {
-        const samples = synthesize(name);
+        let samples;
+        if (name.startsWith('voice-')) {
+          const bytes = Uint8Array.from(atob(this.voices[name.slice(6)] || ''), character => character.charCodeAt(0));
+          if (!bytes.length || bytes.length % 2 || bytes.length >= RATE * 2) throw new Error('无效的语音 PCM');
+          const data = new DataView(bytes.buffer);
+          samples = Float32Array.from({ length: bytes.length / 2 }, (sample, index) => data.getInt16(index * 2, true) / 32768);
+        } else samples = synthesize(name);
         const buffer = this.context.createBuffer(1, samples.length, RATE);
         buffer.copyToChannel(samples, 0);
         this.buffers.set(name, buffer);
@@ -99,6 +108,38 @@ const Soundtrack = (() => {
       source.start();
     }
 
+    playVoice(cue) {
+      this.stopVoice();
+      if (!['3', '2', '1', 'start'].includes(String(cue)) || !this.enabled || !this.context || this.context.state === 'closed') return false;
+      let source;
+      try {
+        let buffer;
+        try { buffer = this.buffer(`voice-${cue}`); }
+        catch { buffer = this.buffer(cue === 'start' ? 'fight' : 'countdown'); }
+        source = this.context.createBufferSource();
+        source.buffer = buffer;
+        source.connect(this.master);
+        source.onended = () => {
+          source.disconnect();
+          if (this.voice === source) this.voice = null;
+        };
+        source.start();
+        this.voice = source;
+        return true;
+      } catch {
+        source?.disconnect();
+        return false;
+      }
+    }
+
+    stopVoice() {
+      if (!this.voice) return;
+      this.voice.onended = null;
+      this.voice.stop();
+      this.voice.disconnect();
+      this.voice = null;
+    }
+
     setMusic(active) {
       this.active = active;
       if (this.music) { this.music.stop(); this.music.disconnect(); this.music = null; }
@@ -112,6 +153,7 @@ const Soundtrack = (() => {
 
     setEnabled(enabled) {
       this.enabled = enabled;
+      if (!enabled) this.stopVoice();
       if (this.master) this.master.gain.setTargetAtTime(enabled ? 0.47 : 0, this.context.currentTime, 0.025);
       this.setMusic(this.active);
     }

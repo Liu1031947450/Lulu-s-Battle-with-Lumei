@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { Match, CONFIG, MOVES, hurtbox, randomSource } = require('../src/engine.js');
+const { createHash } = require('node:crypto');
+const { Match, CONFIG, MOVES, DIFFICULTIES, hurtbox, randomSource } = require('../src/engine.js');
 const { synthesize } = require('../src/audio.js');
 const { poseFor, modelSvg, ANIMATIONS } = require('../src/art.js');
 
@@ -19,6 +20,8 @@ test('构造校验与可复现随机数', () => {
   assert.throws(() => new Match({ mode: 'online' }), RangeError);
   assert.throws(() => new Match({ duration: 0 }), RangeError);
   assert.throws(() => new Match({ countdown: -1 }), RangeError);
+  for (const difficulty of ['unknown', '__proto__', null, 1, {}]) assert.throws(() => new Match({ difficulty }), RangeError);
+  assert.equal(new Match().difficulty, 'medium');
   const first = randomSource(11);
   const second = randomSource(11);
   for (let sample = 0; sample < 100; sample += 1) assert.equal(first(), second());
@@ -277,6 +280,73 @@ test('相同种子的人机对局可复现，观察延迟位于 180～320ms', ()
     const reaction = (first.fighters[0].brain.wait + 1) / 60;
     assert.ok(reaction >= 0.18 && reaction <= 0.32);
   }
+});
+
+test('中等档逐帧保持旧版行为，双人模式不受所选难度影响', () => {
+  const match = new Match({ seed: 17, countdown: 0, aiBoth: true });
+  const history = createHash('sha256');
+  for (let frame = 0; frame < 1800; frame += 1) {
+    const events = match.step();
+    history.update(JSON.stringify([match.phase, match.remaining, match.fighters, match.projectiles, events]));
+  }
+  assert.equal(history.digest('hex'), 'b99f3e9a1100743d4c23dc01fba80dd24edb7dfa1a58c0dbb184a75e6fd1eca3');
+  const first = duel({ difficulty: 'easy' });
+  const second = duel({ difficulty: 'hell' });
+  position(first); position(second);
+  const inputs = frame => [{ right: frame < 60, attack: frame % 30 === 0, skill: frame === 200 }, { guard: frame < 100, attack: frame % 40 === 0, jump: frame === 120 }];
+  assert.deepEqual(tick(first, 600, inputs), tick(second, 600, inputs));
+  assert.deepEqual(first.fighters, second.fighters);
+  assert.deepEqual(first.projectiles, second.projectiles);
+  assert.deepEqual(first.result, second.result);
+});
+
+test('四档反应间隔递减且同档固定种子可复现，不改变生命与冷却规则', () => {
+  assert.deepEqual(Object.keys(DIFFICULTIES), ['easy', 'medium', 'hard', 'hell']);
+  for (const [difficulty, minimum, maximum] of [['easy', 27, 43], ['medium', 11, 19], ['hard', 6, 10], ['hell', 3, 5]]) {
+    const first = duel({ difficulty, aiBoth: true, seed: 17 });
+    const second = duel({ difficulty, aiBoth: true, seed: 17 });
+    assert.ok(first.fighters.every(fighter => fighter.health === CONFIG.health && fighter.cooldown === 0));
+    tick(first, 750); tick(second, 750);
+    assert.deepEqual(first.fighters, second.fighters);
+    for (let iteration = 0; iteration < 100; iteration += 1) {
+      first.fighters[1].brain.wait = 0;
+      first.computerInput(first.fighters[1], first.fighters[0]);
+      const frames = first.fighters[1].brain.wait + 1;
+      assert.ok(frames >= minimum && frames <= maximum, `${difficulty}: ${frames} 帧`);
+    }
+  }
+});
+
+test('四档对同一中等控制器的固定种子对战强度递增，400局均正常结束', () => {
+  const results = [];
+  for (const difficulty of Object.keys(DIFFICULTIES)) {
+    let wins = 0;
+    let health = 0;
+    for (let seed = 1; seed <= 100; seed += 1) {
+      const match = new Match({ difficulty, seed, countdown: 0 });
+      const controller = new Match({ difficulty: 'medium', seed: seed + 1000, countdown: 0 });
+      for (let frame = 0; frame < 5405 && match.phase !== 'finished'; frame += 1) {
+        controller.projectiles = match.projectiles;
+        const input = controller.computerInput(match.fighters[0], match.fighters[1]);
+        match.step([input, {}]);
+        for (const fighter of match.fighters) {
+          assert.ok(Number.isFinite(fighter.x) && fighter.x >= CONFIG.left && fighter.x <= CONFIG.right);
+          assert.ok(Number.isFinite(fighter.y) && fighter.y <= CONFIG.ground);
+          assert.ok(Number.isFinite(fighter.health) && fighter.health >= 0 && fighter.health <= CONFIG.health);
+          assert.ok(fighter.cooldown >= 0 && fighter.cooldown <= CONFIG.cooldown);
+        }
+      }
+      assert.equal(match.phase, 'finished', `${difficulty} seed=${seed}`);
+      wins += Number(match.result.winner === 1);
+      health += match.fighters[1].health;
+    }
+    results.push({ difficulty, wins, averageHealth: Number((health / 100).toFixed(1)) });
+  }
+  for (let index = 1; index < results.length; index += 1) {
+    assert.ok(results[index].wins > results[index - 1].wins);
+    assert.ok(results[index].averageHealth > results[index - 1].averageHealth);
+  }
+  console.log(`难度对照模拟：${JSON.stringify(results)}（非真人胜率）`);
 });
 
 test('100 局自动对战：无越界、异常数值、超时卡死，覆盖人机全套行为', () => {

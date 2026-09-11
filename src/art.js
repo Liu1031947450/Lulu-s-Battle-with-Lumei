@@ -822,7 +822,7 @@ const Artwork = (() => {
     clear() { this.items = []; this.shake = 0; this.banner = null; }
 
     add(event, reducedMotion = false) {
-      if (event.kind === 'fight') this.banner = { text: '开心开打！', life: 1.1, total: 1.1 };
+      if (event.kind === 'fight') this.banner = { kind: 'fight', text: '开始！', life: 1.1, total: 1.1 };
       if (event.kind === 'finish') {
         this.banner = { text: event.winner === null ? '默契平手！' : '好耶！', life: 1.05, total: 1.05 };
         if (event.winner !== null) {

@@ -11,7 +11,7 @@
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 340px; background: var(--paper); color: var(--ink); -webkit-font-smoothing: antialiased; }
+body { margin: 0; min-width: 320px; height: 100dvh; display: flex; flex-direction: column; background: var(--paper); color: var(--ink); -webkit-font-smoothing: antialiased; }
 body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; background: radial-gradient(ellipse at 4% 50%, #efdcb732, transparent 35%), radial-gradient(ellipse at 98% 82%, #d9e6d22e, transparent 30%); }
 button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 button, a { touch-action: manipulation; }
@@ -22,7 +22,9 @@ button svg, button span { pointer-events: none; }
 [hidden] { display: none !important; }
 .icon-library { position: absolute; width: 0; height: 0; overflow: hidden; }
 .topbar, .main-shell { width: min(1120px, calc(100% - 64px)); margin-inline: auto; }
-.topbar { display: flex; justify-content: space-between; align-items: center; padding-top: 23px; padding-bottom: 10px; gap: 20px; }
+.topbar { display: flex; flex-shrink: 0; justify-content: space-between; align-items: center; padding-top: 23px; padding-bottom: 10px; gap: 20px; }
+.main-shell { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: 8px; }
+.main-shell > :not(.arena-slot) { flex-shrink: 0; }
 .brand { border: 0; background: none; padding: 0; display: flex; align-items: center; gap: 11px; text-align: left; }
 .brand-mark { display: grid; place-items: center; width: 44px; height: 44px; background: #f5eacb; border: 1px solid #ecddbc; border-radius: 15px; transform: rotate(-6deg); }
 .brand-mark svg { width: 32px; height: 32px; transform: rotate(6deg); }
@@ -46,7 +48,8 @@ h1 { font-size: clamp(25px, 3vw, 39px); letter-spacing: 2.3px; font-weight: 850;
 .squishy-word { color: #cf9753; position: relative; margin-inline: 3px; display: inline-block; transform: rotate(-2deg); }
 .squishy-word svg { position: absolute; bottom: -1px; left: 0; width: 100%; height: 10px; color: #e8c17d; }
 .intro p { font-size: 12px; color: #9c917e; letter-spacing: 1px; margin: 0; }
-.arena { position: relative; isolation: isolate; overflow: hidden; border: 5px solid #fffdf7; border-radius: 26px; background: #dfeede; box-shadow: 0 0 0 1px #e4decc, 0 9px 28px #635a3820, 0 2px 0 #e0d8c3; }
+.arena-slot { --arena-frame: 10px; flex: 0 1 auto; min-height: 140px; aspect-ratio: 1280 / 620; container-type: size; display: grid; place-items: center; }
+.arena { width: min(100%, calc((100cqh - var(--arena-frame)) * 1280 / 620 + var(--arena-frame))); container: arena / inline-size; position: relative; isolation: isolate; overflow: hidden; border: 5px solid #fffdf7; border-radius: 26px; background: #dfeede; box-shadow: 0 0 0 1px #e4decc, 0 9px 28px #635a3820, 0 2px 0 #e0d8c3; }
 #game-canvas { display: block; width: 100%; height: auto; aspect-ratio: 1280 / 620; outline-offset: -8px; border-radius: inherit; }
 .garden-label { position: absolute; left: 25px; top: 21px; display: flex; align-items: center; gap: 8px; color: #819073; font-size: 11px; letter-spacing: 0.4px; background: #fcfbed9c; border: 1px solid #ffffedb3; border-radius: 20px; padding: 8px 12px; backdrop-filter: blur(4px); }
 .garden-label svg { width: 14px; height: 14px; }
@@ -87,7 +90,7 @@ h1 { font-size: clamp(25px, 3vw, 39px); letter-spacing: 2.3px; font-weight: 850;
 .portrait { width: 54px; height: 54px; border-radius: 19px; background: #fbe9b9; border: 3px solid #fffaf0; box-shadow: 0 2px 0 #b79d6f2e; flex-shrink: 0; }
 .fighter-meters { flex: 1; min-width: 0; }
 .fighter-heading { display: flex; gap: 10px; align-items: baseline; padding: 0 1px 7px; }
-.fighter-heading > strong { font-size: 18px; letter-spacing: 2px; }
+.fighter-heading > strong { font-size: 18px; letter-spacing: 2px; white-space: nowrap; }
 .fighter-heading > span { font-size: 9px; color: #829077; letter-spacing: 0.6px; }
 .fighter-heading > b { font: 700 13px ui-rounded, sans-serif; margin-left: auto; color: #8b815e; }
 .health-track { height: 17px; background: #b6c5a24d; border: 3px solid #fffced; box-shadow: 0 1px 3px #73855624; border-radius: 7px; overflow: hidden; position: relative; }
@@ -114,11 +117,24 @@ h1 { font-size: clamp(25px, 3vw, 39px); letter-spacing: 2.3px; font-weight: 850;
 .round-timer > strong { font: 800 41px/1.18 ui-rounded, "Arial Rounded MT Bold", sans-serif; letter-spacing: -1px; color: #847b57; font-variant-numeric: tabular-nums; }
 .round-timer > strong.hurry { color: #ba7b62; }
 .round-timer > small { font-size: 8px; letter-spacing: 3px; color: #a1a083; }
-.countdown-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; pointer-events: none; padding-bottom: 34px; background: #fff5d82b; }
-.countdown-overlay > span { font-size: 15px; letter-spacing: 4px; color: #a48958; }
-.countdown-overlay > strong { font: 900 91px/1.1 ui-rounded, "Arial Rounded MT Bold", sans-serif; color: #b28b4d; text-shadow: 3px 4px 0 #fff6d5; }
-.countdown-overlay > small { font-size: 10px; letter-spacing: 2px; color: #a19573; }
-.fight-banner { position: absolute; left: 0; right: 0; top: 32%; text-align: center; font-size: clamp(23px, 3.5vw, 43px); font-weight: 850; color: #ac8247; letter-spacing: 5px; text-shadow: 3px 3px 0 #fff6d7, -2px -2px 0 #fff6d7; pointer-events: none; transform: rotate(-4deg); }
+.countdown-overlay { --cue-color: #d99447; position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; pointer-events: none; padding-bottom: 16px; background: radial-gradient(ellipse at center, #fff7e44a, transparent 64%); }
+.countdown-overlay[data-cue="2"] { --cue-color: #cd8499; }
+.countdown-overlay[data-cue="1"] { --cue-color: #659d8b; }
+.countdown-overlay > span { font-size: 15px; letter-spacing: 4px; color: #8d724d; text-shadow: 0 1px 4px #fff9ed; }
+.countdown-cue { position: relative; display: grid; place-items: center; width: clamp(104px, 17cqw, 186px); aspect-ratio: 1; flex: none; isolation: isolate; }
+.countdown-cue > strong { font: 900 clamp(68px, 8.5cqw, 118px)/1 ui-rounded, "Arial Rounded MT Bold", sans-serif; color: var(--cue-color); -webkit-text-stroke: 5px #fff9ed; paint-order: stroke fill; text-shadow: 0 6px 0 #966b4930; }
+#countdown-ring { position: absolute; inset: 12%; border: 5px solid #fff9ecdc; outline: 2px solid #fff9ec66; border-radius: 50%; background: #fff9ec63; z-index: -1; }
+.countdown-stars { position: absolute; inset: 0; font-size: 26px; line-height: 1; color: var(--cue-color); text-shadow: 0 2px 0 #fff9ec; z-index: -1; }
+.countdown-stars > span { position: absolute; }
+.countdown-stars > span:nth-child(1) { left: 1%; top: 19%; transform: rotate(-12deg); }
+.countdown-stars > span:nth-child(2) { right: 0; top: 8%; color: #d9a85e; font-size: 19px; }
+.countdown-stars > span:nth-child(3) { left: 9%; bottom: 10%; color: #cf9aaf; font-size: 16px; }
+.countdown-stars > span:nth-child(4) { right: 2%; bottom: 20%; color: #80b6a1; transform: rotate(14deg); }
+.countdown-overlay > small { font-size: 10px; letter-spacing: 2px; color: #8d795a; text-shadow: 0 1px 3px #fff9ed; }
+.fight-banner { position: absolute; left: 0; right: 0; top: 32%; text-align: center; font-size: clamp(23px, 3.5cqw, 43px); font-weight: 850; color: #ac8247; letter-spacing: 5px; text-shadow: 3px 3px 0 #fff6d7, -2px -2px 0 #fff6d7; pointer-events: none; transform: rotate(-4deg); }
+.fight-banner.intro-start { top: 36%; font: 900 clamp(28px, 5.2cqw, 66px)/1.35 ui-rounded, "PingFang SC", "Microsoft YaHei", sans-serif; color: #d18a43; letter-spacing: 6px; -webkit-text-stroke: 5px #fff9ed; paint-order: stroke fill; text-shadow: 0 5px 0 #946a4930; transform: none; }
+.fight-banner.intro-start::before, .fight-banner.intro-start::after { content: '✦'; display: inline-block; font-size: 0.48em; vertical-align: middle; margin: 0 0.6em; color: #ce8da1; -webkit-text-stroke: 2px #fff9ed; }
+.fight-banner.intro-start::after { color: #7daa94; }
 .arena-corner { position: absolute; left: 23px; right: 19px; bottom: 16px; display: flex; align-items: center; gap: 8px; font-size: 10px; color: #8b9876; }
 .pause-button { margin-left: auto; display: flex; align-items: center; gap: 7px; border: 1px solid #eef0d6; background: #fff8e3bf; padding: 7px 11px; border-radius: 10px; color: #8a8967; font-size: 11px; }
 .pause-button:hover { background: #fff9e4; }
@@ -138,9 +154,9 @@ kbd { font-family: inherit; font-size: 10px; font-weight: 500; color: #8c826d; b
 .restart-button:hover { background: #f0e9db; }
 .restart-button kbd { font-size: 8px; padding: 2px 3px; min-width: 16px; }
 body.is-playing .topbar { padding-bottom: 22px; }
-body.is-playing .arena { margin-top: 8px; }
+body.is-playing .arena-slot { margin-top: 8px; }
 body.is-playing .page-footer { padding-top: 27px; }
-.modal { border: 1px solid #e6ddc9; border-radius: 27px; background: #fdf9f0; color: var(--ink); padding: 36px; box-shadow: 0 18px 100px #4b50324a; max-width: calc(100vw - 32px); max-height: calc(100dvh - 40px); overflow: auto; text-align: center; }
+.modal { border: 1px solid #e6ddc9; border-radius: 27px; background: #fdf9f0; color: var(--ink); padding: 36px; box-shadow: 0 18px 100px #4b50324a; max-width: calc(100vw - 32px); max-height: calc(100dvh - 40px); overflow: auto; overscroll-behavior: contain; text-align: center; }
 .modal::backdrop { background: #444b3b60; backdrop-filter: blur(7px); }
 .modal h2 { margin: 7px 0 8px; font-size: 29px; font-weight: 800; letter-spacing: 2px; }
 .modal-eyebrow { font-size: 9px; letter-spacing: 2.5px; color: #b29b77; }
@@ -148,6 +164,14 @@ body.is-playing .page-footer { padding-top: 27px; }
 .close-button { position: absolute; right: 17px; top: 17px; display: grid; place-items: center; background: #f0e9da; border: none; color: #a3947e; width: 29px; height: 29px; border-radius: 10px; }
 .close-button svg { width: 16px; height: 16px; }
 .help-modal { width: 642px; }
+.settings-modal { width: 430px; }
+.difficulty-field { text-align: left; padding: 18px; border: 1px solid #e8dcc4; border-radius: 16px; background: #faf1de; }
+.difficulty-field label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+.difficulty-field select { width: 100%; height: 44px; min-height: 44px; padding: 10px 12px; border: 1px solid #cfbc98; border-radius: 10px; background: #fffaf1; color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; }
+.difficulty-field select:focus-visible { outline: 3px solid #668b72; outline-offset: 3px; }
+.difficulty-field p { margin: 11px 0 0; font-size: 12px; line-height: 1.7; color: #79684d; min-height: 41px; }
+.settings-note { font-size: 11px; line-height: 1.8; color: #7d705c; margin: 15px 0; }
+#settings-status { min-height: 20px; color: #607954; }
 .help-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; text-align: left; }
 .help-player { border: 1px solid #eadfc8; background: #faf1de; padding: 15px 18px; border-radius: 16px; }
 .help-player h3 { display: flex; gap: 9px; align-items: center; font-size: 15px; margin: 0 0 14px; letter-spacing: 1px; }
@@ -197,6 +221,13 @@ dd { margin: 0; white-space: nowrap; }
   .mode-copy strong { flex-direction: column; gap: 4px; }
   .mode-meta { font-size: 7px; }
   .mode-card { padding: 15px 16px; gap: 12px; }
+  .control-summary div > span { font-size: 8px; }
+  .control-summary kbd { font-size: 8px; min-width: 16px; padding: 2px 4px; margin-right: 2px; }
+  .second-player { padding-left: 16px; }
+  .battle-controls { gap: 17px; }
+}
+
+@container arena (max-width: 1050px) {
   .battle-hud { inset: 15px 18px auto; gap: 13px; grid-template-columns: minmax(0, 1fr) 65px minmax(0, 1fr); }
   .portrait { width: 42px; height: 42px; border-radius: 14px; border-width: 2px; }
   .fighter-hud { gap: 8px; }
@@ -208,15 +239,12 @@ dd { margin: 0; white-space: nowrap; }
   .round-timer > span { font-size: 8px; white-space: nowrap; }
   .skill-meter { font-size: 8px; gap: 4px; margin-top: 5px; }
   .skill-meter small { width: 40px; font-size: 7px; }
-  .control-summary div > span { font-size: 8px; }
-  .control-summary kbd { font-size: 8px; min-width: 16px; padding: 2px 4px; margin-right: 2px; }
-  .second-player { padding-left: 16px; }
-  .battle-controls { gap: 17px; }
 }
 
 @media (max-width: 760px) {
   .topbar, .main-shell { width: calc(100% - 28px); }
-  .topbar { padding-top: 15px; }
+  .topbar { padding-top: 15px; gap: 12px; }
+  .brand { gap: 8px; }
   .brand-copy strong { font-size: 15px; }
   .brand-copy small { font-size: 7px; letter-spacing: 2px; }
   .brand-mark { width: 36px; height: 36px; border-radius: 12px; }
@@ -230,12 +258,8 @@ dd { margin: 0; white-space: nowrap; }
   h1 { font-size: clamp(23px, 5vw, 33px); letter-spacing: 1px; }
   .eyebrow { font-size: 8px; letter-spacing: 1px; }
   .intro p { font-size: 10px; letter-spacing: 0.3px; }
+  .arena-slot { --arena-frame: 6px; }
   .arena { border-radius: 18px; border-width: 3px; }
-  .garden-label { top: 12px; left: 12px; font-size: 9px; padding: 6px 8px; gap: 5px; }
-  .garden-label svg { width: 11px; height: 11px; }
-  .garden-label small, .garden-divider, .home-sticker { display: none; }
-  .play-hint { display: none; }
-  .tiny-star { font-size: 7px; margin: 0 4px; }
   .mode-selection { gap: 10px; margin-top: 15px; }
   .mode-card { padding: 13px 11px; gap: 9px; border-radius: 13px; }
   .mode-icon { width: 35px; height: 39px; border-radius: 10px; }
@@ -247,27 +271,6 @@ dd { margin: 0; white-space: nowrap; }
   .page-footer { gap: 7px; flex-wrap: wrap; font-size: 8px; line-height: 1.5; padding-top: 19px; }
   .page-footer > span:first-child { margin-left: 0; }
   .page-footer .keyboard-note { flex-basis: 100%; justify-content: center; margin: 0; font-size: 8px; }
-  .battle-hud { inset: 10px 10px auto; grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr); gap: 8px; }
-  .portrait { display: none; }
-  .fighter-heading > strong { font-size: 12px; letter-spacing: 1px; }
-  .fighter-heading > span { font-size: 6px; letter-spacing: 0; }
-  .fighter-heading > b { font-size: 9px; }
-  .fighter-heading { padding-bottom: 4px; gap: 5px; }
-  .health-track { height: 10px; border-radius: 5px; }
-  .skill-meter > span, .skill-meter > svg { display: none; }
-  .skill-meter small { font-size: 6px; width: 34px; }
-  .cooldown-track { height: 3px; }
-  .round-timer > strong { font-size: 26px; }
-  .round-timer > small { display: none; }
-  .round-timer > span { font-size: 6px; letter-spacing: 0; padding: 2px 4px; }
-  .arena-corner { bottom: 6px; left: 11px; right: 7px; font-size: 7px; gap: 5px; }
-  .pause-button { font-size: 8px; padding: 4px 6px; gap: 3px; border-radius: 6px; }
-  .pause-button kbd { display: none; }
-  .pause-button svg { width: 9px; height: 9px; }
-  .countdown-overlay { gap: 5px; padding-bottom: 0; }
-  .countdown-overlay > strong { font-size: 47px; }
-  .countdown-overlay > span { font-size: 9px; letter-spacing: 2px; }
-  .countdown-overlay > small { font-size: 7px; }
   .battle-controls { flex-wrap: wrap; gap: 16px 0; justify-content: space-between; padding-top: 16px; }
   .control-summary { gap: 6px; }
   .control-summary strong { font-size: 9px; }
@@ -285,6 +288,74 @@ dd { margin: 0; white-space: nowrap; }
   .help-player kbd { font-size: 8px; min-width: 16px; padding: 2px 3px; }
 }
 
+@container arena (max-width: 760px) {
+  .garden-label { top: 12px; left: 12px; font-size: 9px; padding: 6px 8px; gap: 5px; }
+  .garden-label svg { width: 11px; height: 11px; }
+  .garden-label small, .garden-divider, .home-sticker, .play-hint { display: none; }
+  .battle-hud { inset: 10px 10px auto; grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr); gap: 8px; }
+  .portrait { display: none; }
+  .fighter-heading > strong { font-size: 12px; letter-spacing: 1px; }
+  .fighter-heading > span { font-size: 6px; letter-spacing: 0; white-space: nowrap; }
+  .fighter-heading > b { font-size: 9px; }
+  .fighter-heading { padding-bottom: 4px; gap: 5px; }
+  .health-track { height: 10px; border-radius: 5px; }
+  .skill-meter > span, .skill-meter > svg { display: none; }
+  .skill-meter small { font-size: 6px; width: 34px; }
+  .cooldown-track { height: 3px; }
+  .round-timer > strong { font-size: 26px; }
+  .round-timer > small { display: none; }
+  .round-timer > span { font-size: 6px; letter-spacing: 0; padding: 2px 4px; }
+  .arena-corner { bottom: 6px; left: 11px; right: 7px; font-size: 7px; gap: 5px; }
+  .pause-button { font-size: 8px; padding: 4px 6px; gap: 3px; border-radius: 6px; }
+  .pause-button kbd { display: none; }
+  .pause-button svg { width: 9px; height: 9px; }
+  .countdown-overlay { gap: 4px; padding: 34px 0 0; }
+  .countdown-cue { width: 70px; }
+  .countdown-cue > strong { font-size: 47px; -webkit-text-stroke-width: 3px; }
+  #countdown-ring { border-width: 3px; }
+  .countdown-stars { font-size: 16px; }
+  .countdown-stars > span:nth-child(2), .countdown-stars > span:nth-child(3) { font-size: 12px; }
+  .countdown-overlay > span, .countdown-overlay > small { display: none; }
+  .fight-banner.intro-start { top: 45%; -webkit-text-stroke-width: 3px; }
+}
+
+@container arena (max-width: 360px) {
+  .countdown-overlay { padding-top: 52px; }
+  .countdown-cue { width: 56px; }
+  .countdown-cue > strong { font-size: 40px; }
+  .fight-banner.intro-start { top: 49%; }
+}
+
+@media (max-height: 800px) {
+  .topbar { padding-block: 12px 6px; }
+  .intro { padding-block: 10px 14px; }
+  h1 { font-size: clamp(23px, 3vw, 32px); margin-block: 4px; }
+  .mode-selection { margin-top: 12px; }
+  .mode-card { padding-block: 12px; }
+  .battle-controls { padding-top: 14px; }
+  .page-footer, body.is-playing .page-footer { padding-block: 12px; }
+  body.is-playing .topbar { padding-bottom: 12px; }
+}
+
+@media (max-height: 540px) {
+  .topbar, body.is-playing .topbar { padding-block: 6px; }
+  .brand-mark { width: 32px; height: 32px; }
+  .brand-mark svg { width: 25px; height: 25px; }
+  .brand-copy small, .offline-pill, .intro .eyebrow, .intro p, .page-footer { display: none; }
+  .intro { padding-block: 2px 6px; }
+  h1 { font-size: 22px; line-height: 1.3; margin-block: 2px; }
+  .mode-selection { margin-top: 8px; }
+  .mode-card { padding: 8px 12px; gap: 10px; }
+  .mode-icon { width: 34px; height: 34px; }
+  .mode-copy strong { font-size: 15px; }
+  .mode-meta, .mode-description, .mode-arrow { display: none; }
+  .battle-controls { padding-top: 8px; gap: 8px; }
+  .control-summary > div { gap: 3px; }
+  .control-summary strong { display: none; }
+  body.is-playing .arena-slot { margin-top: 4px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+  #countdown-ring, .countdown-stars, .fight-banner.intro-start::before, .fight-banner.intro-start::after { display: none; }
 }

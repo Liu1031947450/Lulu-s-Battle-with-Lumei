@@ -5,8 +5,9 @@
   "description": "噜噜大战噜妹 · 完整离线双人 / 人机格斗游戏",
   "scripts": {
     "models": "node scripts/export-models.mjs",
+    "voices": "node scripts/export-voices.mjs",
     "build": "node scripts/build.mjs",
-    "test": "node --test tests/engine.test.cjs tests/input.test.cjs tests/models.test.mjs",
+    "test": "node --test tests/engine.test.cjs tests/input.test.cjs tests/models.test.mjs tests/audio.test.mjs",
     "test:browser": "node tests/browser.mjs",
     "assets": "node scripts/export-assets.mjs",
     "check": "npm run build && npm test && npm run test:browser",

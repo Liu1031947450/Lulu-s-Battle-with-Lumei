@@ -16,6 +16,7 @@
     <symbol id="icon-sound" viewBox="0 0 24 24"><path d="m11 5-5 4H3v6h3l5 4V5Zm4 3c3 2 3 6 0 8m3-11c5 4 5 10 0 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="icon-muted" viewBox="0 0 24 24"><path d="m11 5-5 4H3v6h3l5 4V5Zm5 4 5 6m0-6-5 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="icon-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 9a2.6 2.6 0 0 1 5 1c0 2-2.5 2-2.5 4m0 3h.01" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><path d="m9.5 3-.6 2.4-2 .9-2.2-.7-2 3.4 1.7 1.7v2.6l-1.7 1.7 2 3.4 2.2-.7 2 .9.6 2.4h5l.6-2.4 2-.9 2.2.7 2-3.4-1.7-1.7v-2.6l1.7-1.7-2-3.4-2.2.7-2-.9L14.5 3Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
     <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M4 18C-1 7 10 4 20 4c0 12-4 17-12 15m-4 2L16 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="icon-person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 21v-3a7 7 0 0 1 14 0v3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
@@ -36,6 +37,7 @@
       <span class="offline-pill"><span></span>离线也能开心玩</span>
       <button class="icon-button" id="sound-toggle" aria-label="关闭声音" aria-pressed="false" title="声音开关"><svg><use id="sound-icon" href="#icon-sound"/></svg></button>
       <button class="guide-button" id="help-open"><svg><use href="#icon-help"/></svg><span>操作指南</span></button>
+      <button class="guide-button" id="settings-open" aria-label="游戏设置" aria-haspopup="dialog" aria-controls="settings-dialog" title="游戏设置"><svg aria-hidden="true"><use href="#icon-settings"/></svg><span>设置</span></button>
     </nav>
   </header>
 
@@ -46,6 +48,7 @@
       <p>和噜噜、噜妹一起，把今天的烦恼轻轻打飞。</p>
     </section>
 
+    <div class="arena-slot">
     <section class="arena" id="arena" aria-label="橘子云朵花园对战场地">
       <canvas id="game-canvas" width="1280" height="620" tabindex="0" aria-label="格斗游戏画面。使用下方所列键盘操作；按 Escape 暂停。">你的浏览器需要支持 Canvas 才能运行游戏。</canvas>
       <div class="garden-label" id="garden-label"><svg><use href="#icon-leaf"/></svg><span>橘子云朵花园</span><span class="garden-divider"></span><small>今天也是好天气</small></div>
@@ -70,16 +73,26 @@
           </div>
         </section>
       </div>
-      <div class="countdown-overlay" id="countdown-overlay" hidden aria-live="polite"><span>准备好了吗？</span><strong id="countdown-number">3</strong><small>深呼吸，放轻松</small></div>
+      <div class="countdown-overlay" id="countdown-overlay" hidden aria-live="polite" aria-atomic="true" data-cue="3">
+        <span>准备好了吗？</span>
+        <div class="countdown-cue">
+          <i id="countdown-ring" aria-hidden="true"></i>
+          <div class="countdown-stars" aria-hidden="true"><span>✦</span><span>✦</span><span>✦</span><span>✦</span></div>
+          <strong id="countdown-number">3</strong>
+        </div>
+        <small>深呼吸，放轻松</small>
+      </div>
       <div class="fight-banner" id="fight-banner" hidden></div>
       <div class="arena-corner" id="arena-corner" hidden><span class="status-dot"></span><span id="arena-status">正在对战</span><button id="pause-open" class="pause-button" aria-label="暂停游戏"><svg><use href="#icon-pause"/></svg><span>暂停</span><kbd>Esc</kbd></button></div>
       <div class="play-hint" id="play-hint"><span class="tiny-star">✦</span> 没有输家，只有越来越开心的我们 <span class="tiny-star">✦</span></div>
     </section>
 
+    </div>
+
     <section class="mode-selection" id="mode-selection" aria-label="选择对战模式">
       <button class="mode-card mode-solo" id="start-solo">
         <span class="mode-icon"><svg><use href="#icon-person"/></svg><span class="mini-spark">✦</span></span>
-        <span class="mode-copy"><span class="mode-meta">SOLO PLAY <span>中等难度</span></span><strong>人机对战<span class="mode-description">一个人，也能玩得很开心</span></strong></span>
+        <span class="mode-copy"><span class="mode-meta">SOLO PLAY <span id="solo-difficulty">中等难度</span></span><strong>人机对战<span class="mode-description">一个人，也能玩得很开心</span></strong></span>
         <span class="mode-arrow"><svg><use href="#icon-arrow"/></svg></span>
       </button>
       <button class="mode-card mode-duo" id="start-duo">
@@ -99,6 +112,21 @@
     <p id="fatal-error" class="error-message" role="alert" hidden></p>
     <noscript><p class="error-message">请在浏览器中允许 JavaScript 后重新打开游戏。游戏完全离线，不会联网。</p></noscript>
   </main>
+
+  <dialog class="modal settings-modal" id="settings-dialog" aria-labelledby="settings-title">
+    <button class="close-button" id="settings-close" aria-label="关闭设置"><svg><use href="#icon-close"/></svg></button>
+    <div class="modal-eyebrow">PLAY YOUR WAY</div>
+    <h2 id="settings-title">游戏设置</h2>
+    <p class="modal-subtitle">选一个适合你的挑战。</p>
+    <div class="difficulty-field">
+      <label for="ai-difficulty">人机对战难度</label>
+      <select id="ai-difficulty" aria-describedby="difficulty-description difficulty-note"></select>
+      <p id="difficulty-description"></p>
+    </div>
+    <p class="settings-note" id="difficulty-note">仅影响人机对战。更改从下一局或重开后生效，当前对局难度不变。</p>
+    <p class="settings-note" id="settings-status" role="status"></p>
+    <button class="primary-button" id="settings-done">完成<svg><use href="#icon-check"/></svg></button>
+  </dialog>
 
   <dialog class="modal help-modal" id="help-dialog" aria-labelledby="help-title">
     <button class="close-button" id="help-close" aria-label="关闭操作指南"><svg><use href="#icon-close"/></svg></button>

@@ -13,14 +13,18 @@
   const audio = new Soundtrack.Player();
   const effects = new Artwork.Effects();
   const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const dialogs = { help: byId('help-dialog'), pause: byId('pause-dialog'), result: byId('result-dialog') };
+  const dialogs = { help: byId('help-dialog'), pause: byId('pause-dialog'), result: byId('result-dialog'), settings: byId('settings-dialog') };
   let match = null;
   let currentMode = 'solo';
+  let selectedDifficulty = 'medium';
   let currentMap = 'garden';
+  let introCue = null;
+  let introAnimations = [];
   let visualTime = 0;
   let accumulator = 0;
   let previousTime = 0;
   let wasPlayingBeforeHelp = false;
+  let wasPlayingBeforeSettings = false;
   let resultShown = false;
   let lastAnnouncement = '';
   let lastHud = '';
@@ -41,8 +45,23 @@
   try { audio.enabled = localStorage.getItem('lulu-sound') !== 'off'; } catch { /* file:// 的隐私存储限制不影响游玩。 */ }
   updateSoundButton();
 
+  try {
+    const saved = localStorage.getItem('lulu-difficulty');
+    if (Object.hasOwn(Battle.DIFFICULTIES, saved)) selectedDifficulty = saved;
+  } catch {}
+  for (const [value, difficulty] of Object.entries(Battle.DIFFICULTIES)) byId('ai-difficulty').add(new Option(difficulty.label, value));
+  updateDifficulty();
+
+  function updateDifficulty() {
+    const difficulty = Battle.DIFFICULTIES[selectedDifficulty];
+    byId('ai-difficulty').value = selectedDifficulty;
+    byId('difficulty-description').textContent = difficulty.description;
+    byId('solo-difficulty').textContent = selectedDifficulty === 'hell' ? difficulty.label : `${difficulty.label}难度`;
+  }
+
   function closeDialogs() {
     Object.values(dialogs).forEach(dialog => { if (dialog.open) dialog.close(); });
+    wasPlayingBeforeSettings = false;
   }
 
   function setGameLayout(active) {
@@ -71,20 +90,70 @@
     drawPortrait(byId('portrait-1'), 'lumei');
   });
 
+  function clearIntro() {
+    for (const animation of introAnimations) animation.cancel();
+    introAnimations = [];
+    introCue = null;
+    audio.stopVoice();
+    byId('fight-banner').classList.remove('intro-start');
+  }
+
+  function showIntro(cue) {
+    clearIntro();
+    introCue = String(cue);
+    const starting = introCue === 'start';
+    const target = byId(starting ? 'fight-banner' : 'countdown-number');
+    target.textContent = starting ? '开始！' : introCue;
+    if (starting) { target.hidden = false; target.classList.add('intro-start'); }
+    else byId('countdown-overlay').dataset.cue = introCue;
+    audio.playVoice(introCue);
+    if (reducedMotionQuery.matches || typeof target.animate !== 'function') return;
+    introAnimations.push(target.animate([
+      { transform: 'translateY(-14px) scale(0.65)', opacity: 0, offset: 0 },
+      { transform: 'translateY(0) scale(1.12)', opacity: 1, offset: 0.22 },
+      { transform: 'translateY(2px) scale(0.96)', opacity: 1, offset: 0.38 },
+      { transform: 'translateY(0) scale(1)', opacity: 1, offset: 0.56 },
+      { transform: 'translateY(0) scale(1)', opacity: 1, offset: 0.82 },
+      { transform: 'translateY(-6px) scale(0.94)', opacity: 0, offset: 1 }
+    ], { duration: starting ? 1100 : 1000, fill: 'both' }));
+    if (!starting) introAnimations.push(byId('countdown-ring').animate([
+      { transform: 'scale(0.65)', opacity: 0.2 },
+      { transform: 'scale(1)', opacity: 1, offset: 0.35 },
+      { transform: 'scale(1.15)', opacity: 0 }
+    ], { duration: 1000, fill: 'both' }));
+    for (const animation of introAnimations) { animation.pause(); animation.currentTime = 0; }
+  }
+
+  function updateIntro() {
+    if (!introCue) return;
+    const starting = introCue === 'start';
+    if (!match || (starting ? effects.banner?.kind !== 'fight' : match.phase !== 'countdown')) { clearIntro(); return; }
+    if (reducedMotionQuery.matches) {
+      for (const animation of introAnimations) animation.cancel();
+      introAnimations = [];
+      return;
+    }
+    const elapsed = starting ? (effects.banner.total - effects.banner.life) * 1000 : (Number(introCue) * 60 - match.countdown) / 60 * 1000;
+    for (const animation of introAnimations) animation.currentTime = Math.max(0, elapsed);
+  }
+
   function start(mode = currentMode) {
     currentMode = mode;
     closeDialogs();
-    match = new Battle.Match({ mode });
+    clearIntro();
+    match = new Battle.Match({ mode, difficulty: selectedDifficulty });
     currentMap = Artwork.randomMap(currentMap);
     byId('arena').setAttribute('aria-label', `${Artwork.MAPS[currentMap]}对战场地`);
     accumulator = 0;
     effects.clear();
     resultShown = false;
     lastHud = '';
+    byId('countdown-number').textContent = '3';
+    byId('countdown-overlay').dataset.cue = '3';
     keyboard.setEnabled(true);
     setGameLayout(true);
     byId('match-mode').textContent = mode === 'solo' ? '人机对战' : '双人对战';
-    byId('opponent-label').textContent = mode === 'solo' ? 'CPU · 中等' : 'P2 · 玩家';
+    byId('opponent-label').textContent = mode === 'solo' ? `CPU · ${Battle.DIFFICULTIES[match.difficulty].label}` : 'P2 · 玩家';
     byId('second-controls-title').textContent = mode === 'solo' ? '噜妹 · 人机操作' : '噜妹';
     byId('arena-status').textContent = '准备开打';
     updateHud();
@@ -95,6 +164,7 @@
 
   function home() {
     closeDialogs();
+    clearIntro();
     keyboard.setEnabled(false);
     match = null;
     effects.clear();
@@ -107,8 +177,9 @@
   }
 
   function pause(reason = '喝口水，快乐不会溜走。') {
-    if (!match || match.phase === 'finished' || dialogs.help.open || dialogs.pause.open) return;
+    if (!match || match.phase === 'finished' || dialogs.help.open || dialogs.pause.open || dialogs.settings.open) return;
     match.pause(true);
+    audio.stopVoice();
     keyboard.setEnabled(false);
     accumulator = 0;
     audio.setMusic(false);
@@ -132,7 +203,7 @@
 
   function openHelp() {
     wasPlayingBeforeHelp = Boolean(match && !match.paused && match.phase !== 'finished');
-    if (wasPlayingBeforeHelp) { match.pause(true); audio.setMusic(false); keyboard.setEnabled(false); accumulator = 0; }
+    if (wasPlayingBeforeHelp) { match.pause(true); audio.stopVoice(); audio.setMusic(false); keyboard.setEnabled(false); accumulator = 0; }
     dialogs.help.showModal();
     byId('help-done').focus();
   }
@@ -149,8 +220,25 @@
     wasPlayingBeforeHelp = false;
   }
 
+  function openSettings() {
+    if (dialogs.settings.open) return;
+    wasPlayingBeforeSettings = Boolean(match && !match.paused && match.phase !== 'finished');
+    if (wasPlayingBeforeSettings) { match.pause(true); audio.stopVoice(); audio.setMusic(false); keyboard.setEnabled(false); accumulator = 0; }
+    updateDifficulty();
+    byId('settings-status').textContent = match?.mode === 'solo' ? `当前对局：${Battle.DIFFICULTIES[match.difficulty].label}` : '';
+    dialogs.settings.showModal();
+    byId('ai-difficulty').focus();
+  }
+
+  function closeSettings() {
+    dialogs.settings.close();
+    if (wasPlayingBeforeSettings && match) resume();
+    else if (!Object.values(dialogs).some(dialog => dialog.open)) byId('settings-open').focus();
+    wasPlayingBeforeSettings = false;
+  }
+
   function showResult() {
-    if (!match?.result || resultShown || dialogs.help.open) return;
+    if (!match?.result || resultShown || dialogs.help.open || dialogs.settings.open) return;
     resultShown = true;
     keyboard.setEnabled(false);
     const result = match.result;
@@ -189,7 +277,6 @@
       byId(`cooldown-label-${index}`).textContent = fighter.cooldown === 0 ? '准备就绪' : `${(fighter.cooldown / 60).toFixed(1)}s`;
     }
     byId('countdown-overlay').hidden = match.phase !== 'countdown';
-    if (match.phase === 'countdown') byId('countdown-number').textContent = String(Math.max(1, Math.ceil(match.countdown / 60)));
     byId('arena-status').textContent = match.paused ? '已暂停' : match.phase === 'countdown' ? '准备开打' : match.phase === 'finished' ? '本局结束' : '正在对战';
   }
 
@@ -213,6 +300,7 @@
     context.restore();
     byId('fight-banner').hidden = !effects.banner || dialogs.result.open;
     if (effects.banner) byId('fight-banner').textContent = effects.banner.text;
+    updateIntro();
   }
 
   function animate(milliseconds) {
@@ -228,7 +316,9 @@
         const events = match.step(keyboard.sample());
         for (const event of events) {
           effects.add(event, reducedMotionQuery.matches);
-          audio.play(event.kind);
+          if (event.kind === 'countdown') showIntro(event.number);
+          else if (event.kind === 'fight') showIntro('start');
+          else audio.play(event.kind);
           if (event.kind === 'finish') { audio.setMusic(false); keyboard.setEnabled(false); }
         }
         accumulator -= 1 / 60;
@@ -252,6 +342,21 @@
   byId('help-open').addEventListener('click', openHelp);
   byId('help-close').addEventListener('click', closeHelp);
   byId('help-done').addEventListener('click', closeHelp);
+  byId('settings-open').addEventListener('click', openSettings);
+  byId('settings-close').addEventListener('click', closeSettings);
+  byId('settings-done').addEventListener('click', closeSettings);
+  byId('ai-difficulty').addEventListener('change', event => {
+    const difficulty = event.target.value;
+    if (!Object.hasOwn(Battle.DIFFICULTIES, difficulty)) { updateDifficulty(); return; }
+    selectedDifficulty = difficulty;
+    updateDifficulty();
+    try {
+      localStorage.setItem('lulu-difficulty', selectedDifficulty);
+      byId('settings-status').textContent = `已保存：${Battle.DIFFICULTIES[selectedDifficulty].label}，下一局人机对战生效。`;
+    } catch {
+      byId('settings-status').textContent = '本页已应用；浏览器无法保存设置，本次选择仅在当前页面有效。';
+    }
+  });
   byId('pause-open').addEventListener('click', () => pause());
   byId('resume-game').addEventListener('click', resume);
   for (const id of ['quick-restart', 'pause-restart', 'play-again']) byId(id).addEventListener('click', () => start());
@@ -259,10 +364,11 @@
   dialogs.help.addEventListener('cancel', event => { event.preventDefault(); closeHelp(); });
   dialogs.pause.addEventListener('cancel', event => { event.preventDefault(); resume(); });
   dialogs.result.addEventListener('cancel', event => { event.preventDefault(); home(); });
+  dialogs.settings.addEventListener('cancel', event => { event.preventDefault(); closeSettings(); });
   // 不依赖系统的 Tab 导航偏好，保证弹窗按钮可顺序访问且焦点不会逃出弹窗。
   Object.values(dialogs).forEach(dialog => dialog.addEventListener('keydown', event => {
     if (event.key !== 'Tab' || event.ctrlKey || event.metaKey || event.altKey) return;
-    const buttons = [...dialog.querySelectorAll('button')].filter(button => !button.disabled && !button.hidden);
+    const buttons = [...dialog.querySelectorAll('button, select')].filter(button => !button.disabled && !button.hidden);
     if (!buttons.length) return;
     event.preventDefault();
     const current = buttons.indexOf(document.activeElement);
@@ -280,12 +386,12 @@
   /* 只读诊断供自动验收与故障定位使用，不提供改血量或跳过对局接口。 */
   window.LuluGame = Object.freeze({
     snapshot: () => match ? {
-      mode: match.mode, map: currentMap, phase: match.phase, paused: match.paused, frame: match.frame, remaining: match.remaining,
+      mode: match.mode, difficulty: match.mode === 'solo' ? match.difficulty : null, settings: { difficulty: selectedDifficulty }, map: currentMap, phase: match.phase, paused: match.paused, frame: match.frame, remaining: match.remaining,
       countdown: match.countdown, projectiles: match.projectiles.length, effects: effects.items.length,
       result: match.result ? structuredClone(match.result) : null,
       fighters: match.fighters.map(fighter => ({ id: fighter.id, kind: fighter.kind, x: fighter.x, y: fighter.y, health: fighter.health, state: fighter.state, facing: fighter.facing, jumps: fighter.jumps, grounded: fighter.grounded, cooldown: fighter.cooldown, guarding: fighter.guarding, running: fighter.running, stats: { ...fighter.stats } })),
       audio: { enabled: audio.enabled, state: audio.context?.state ?? 'locked', music: Boolean(audio.music) }
-    } : { phase: 'home', map: 'garden', audio: { enabled: audio.enabled, state: audio.context?.state ?? 'locked' } },
+    } : { phase: 'home', settings: { difficulty: selectedDifficulty }, map: 'garden', audio: { enabled: audio.enabled, state: audio.context?.state ?? 'locked' } },
     get ready() { return !globalThis.Character3D || Character3D.status().state !== 'loading'; }
   });
   requestAnimationFrame(animate);

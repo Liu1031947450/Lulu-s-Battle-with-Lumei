@@ -28,6 +28,29 @@ const Battle = (() => {
     lumei: Object.freeze({ startup: 17, active: 1, recovery: 24, damage: 16, reach: 0, knockback: 350, stun: 21 })
   });
 
+  const DIFFICULTIES = Object.freeze({
+    easy: Object.freeze({
+      label: '简单', description: '反应较慢，攻防更宽松，适合熟悉操作。',
+      wait: 26, spread: 17, guard: 0.26, evade: 0.4, runDistance: 520, jump: 0.04,
+      rangedSkill: 0.18, retreat: 0.26, crouch: 0.4, crouchAttack: 0.25, closeSkill: 0.92, attack: 0.68, punish: false
+    }),
+    medium: Object.freeze({
+      label: '中等', description: '保持原有的人机表现，攻守均衡。',
+      wait: 10, spread: 9, guard: 0.58, evade: 0.75, runDistance: 380, jump: 0.09,
+      rangedSkill: 0.44, retreat: 0.14, crouch: 0.24, crouchAttack: 0.6, closeSkill: 0.71, attack: 0.91, punish: true
+    }),
+    hard: Object.freeze({
+      label: '困难', description: '反应更快，防守更积极，出招与技能更频繁。',
+      wait: 5, spread: 5, guard: 0.74, evade: 0.91, runDistance: 300, jump: 0.06,
+      rangedSkill: 0.66, retreat: 0.07, crouch: 0.15, crouchAttack: 0.78, closeSkill: 0.56, attack: 0.97, punish: true
+    }),
+    hell: Object.freeze({
+      label: '地狱模式', description: '高速反应与持续压制，血量、伤害和冷却仍与玩家相同。',
+      wait: 2, spread: 3, guard: 0.87, evade: 0.98, runDistance: 230, jump: 0.04,
+      rangedSkill: 0.86, retreat: 0.03, crouch: 0.1, crouchAttack: 0.92, closeSkill: 0.44, attack: 0.995, punish: true
+    })
+  });
+
   const EMPTY_INPUT = Object.freeze({ left: false, right: false, run: false, jump: false, crouch: false, attack: false, skill: false, guard: false });
   const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
 
@@ -105,11 +128,13 @@ const Battle = (() => {
   }
 
   class Match {
-    constructor({ mode = 'solo', seed = Date.now(), duration = CONFIG.duration, countdown = CONFIG.countdown, aiBoth = false } = {}) {
+    constructor({ mode = 'solo', difficulty = 'medium', seed = Date.now(), duration = CONFIG.duration, countdown = CONFIG.countdown, aiBoth = false } = {}) {
       if (!['solo', 'duo'].includes(mode)) throw new RangeError('未知对战模式');
+      if (typeof difficulty !== 'string' || !Object.hasOwn(DIFFICULTIES, difficulty)) throw new RangeError('未知人机难度');
       if (!Number.isFinite(duration) || duration <= 0) throw new RangeError('对局时间必须大于零');
       if (!Number.isInteger(countdown) || countdown < 0) throw new RangeError('倒计时必须是非负整数帧');
       this.mode = mode;
+      this.difficulty = difficulty;
       this.aiBoth = aiBoth;
       this.seed = seed;
       this.random = randomSource(seed);
@@ -156,39 +181,40 @@ const Battle = (() => {
         brain.input = input;
         return input;
       }
-      brain.wait = 10 + Math.floor(this.random() * 9);
+      const difficulty = DIFFICULTIES[this.difficulty];
+      brain.wait = difficulty.wait + Math.floor(this.random() * difficulty.spread);
       Object.assign(input, EMPTY_INPUT);
       const distance = Math.abs(opponent.x - fighter.x);
       const towards = opponent.x > fighter.x ? 1 : -1;
       const hostileBubble = this.projectiles.some(projectile => projectile.owner !== fighter.id && Math.abs(projectile.x - fighter.x) < 270);
       const danger = (opponent.move && distance < 215) || hostileBubble;
       const chance = this.random();
-      if (danger && chance < 0.58 && fighter.grounded) {
+      if (danger && chance < difficulty.guard && fighter.grounded) {
         input.guard = true;
-      } else if (danger && chance < 0.75) {
+      } else if (danger && chance < difficulty.evade) {
         input.jump = fighter.jumps < 2;
         input.left = towards < 0;
         input.right = towards > 0;
       } else if (distance > 150) {
         input.left = towards < 0;
         input.right = towards > 0;
-        input.run = distance > 380;
-        input.jump = this.random() < 0.09 && fighter.grounded;
+        input.run = distance > difficulty.runDistance;
+        input.jump = this.random() < difficulty.jump && fighter.grounded;
         if (fighter.cooldown === 0 && (fighter.kind === 'lumei' ? distance < 550 : distance < 285)) {
-          input.skill = this.random() < 0.44;
+          input.skill = this.random() < difficulty.rangedSkill;
         }
-      } else if (chance < 0.14) {
+      } else if (chance < difficulty.retreat) {
         input.left = towards > 0;
         input.right = towards < 0;
-      } else if (chance < 0.24) {
+      } else if (chance < difficulty.crouch) {
         input.crouch = true;
-        input.attack = this.random() < 0.6;
-      } else if (fighter.cooldown === 0 && chance > 0.71) {
+        input.attack = this.random() < difficulty.crouchAttack;
+      } else if (fighter.cooldown === 0 && chance > difficulty.closeSkill) {
         input.skill = true;
       } else {
-        input.attack = chance < 0.91;
+        input.attack = chance < difficulty.attack;
       }
-      if (opponent.stun > 0 || (opponent.move && opponent.move.frame > 20)) {
+      if (difficulty.punish && (opponent.stun > 0 || (opponent.move && opponent.move.frame > 20))) {
         if (distance < 164 && !input.guard) input.attack = true;
       }
       brain.input = input;
@@ -409,7 +435,7 @@ const Battle = (() => {
     }
   }
 
-  return { CONFIG, MOVES, EMPTY_INPUT, Match, createFighter, hurtbox, hitbox, overlaps, randomSource };
+  return { CONFIG, MOVES, DIFFICULTIES, EMPTY_INPUT, Match, createFighter, hurtbox, hitbox, overlaps, randomSource };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = Battle;
